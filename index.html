@@ -3908,32 +3908,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!result.success) throw new Error(result.error || '下載失敗');
     const data = result.data;
     const cloudFoodCount = (data.foods && Array.isArray(data.foods)) ? data.foods.length : 0;
-    if (data.foods && Array.isArray(data.foods) && data.foods.length > 0) {
+    const localFoodCount = foods.length;
+    if (cloudFoodCount > 0 && cloudFoodCount < localFoodCount * 0.5) {
+     setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 雲端只有 ' + cloudFoodCount + ' 款，本地有 ' + localFoodCount + ' 款。已阻止下載以保護本地資料。請先上傳恢復雲端。', 'error');
+     showToast('⚠️ 雲端資料異常（' + cloudFoodCount + ' 款），已阻止覆蓋');
+     if (data.savedDocs && Array.isArray(data.savedDocs)) {
+      savedDocs = data.savedDocs;
+      saveDocs();
+     }
+    } else if (cloudFoodCount > 0) {
      foods = data.foods;
-    }
-    if (data.categories && Array.isArray(data.categories)) {
-     categories = data.categories;
-    }
-    if (data.categoryEmojis) {
-     Object.keys(categoryEmojis).forEach(k => delete categoryEmojis[k]);
-     Object.assign(categoryEmojis, data.categoryEmojis);
-    }
-    if (data.savedDocs && Array.isArray(data.savedDocs)) {
-     savedDocs = data.savedDocs;
-     saveDocs();
-    }
-    renderCategories();
-    renderCategoryPills();
-    renderFoodList();
-    updateStats();
-    saveToIndexedDB();
-    await saveLastSyncTime();
-    if (cloudFoodCount === 0) {
-     setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 雲端沒有食物資料，保留本地 ' + foods.length + ' 款', 'error');
-     showToast('⚠️ 雲端沒有食物資料');
-    } else {
+     if (data.categories && Array.isArray(data.categories)) {
+      categories = data.categories;
+     }
+     if (data.categoryEmojis) {
+      Object.keys(categoryEmojis).forEach(k => delete categoryEmojis[k]);
+      Object.assign(categoryEmojis, data.categoryEmojis);
+     }
+     if (data.savedDocs && Array.isArray(data.savedDocs)) {
+      savedDocs = data.savedDocs;
+      saveDocs();
+     }
+     renderCategories();
+     renderCategoryPills();
+     renderFoodList();
+     updateStats();
+     saveToIndexedDB();
+     await saveLastSyncTime();
      setSheetSyncStatus('<i class="fas fa-check-circle"></i> 下載成功！雲端共 ' + cloudFoodCount + ' 款食物', 'success');
      showToast('已從雲端下載 ' + cloudFoodCount + ' 款食物');
+    } else {
+     setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 雲端沒有食物資料，保留本地 ' + localFoodCount + ' 款', 'error');
+     showToast('⚠️ 雲端沒有食物資料');
     }
    } catch (err) {
     console.error('Download error:', err);
@@ -4064,23 +4070,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (response.ok) {
        const result = await response.json();
        if (result.success && result.data?.foods?.length > 0) {
-        foods = result.data.foods;
-        if (result.data.categories) categories = result.data.categories;
-        if (result.data.categoryEmojis) {
-         Object.keys(categoryEmojis).forEach(k => delete categoryEmojis[k]);
-         Object.assign(categoryEmojis, result.data.categoryEmojis);
+        var cloudCount = result.data.foods.length;
+        var localCount = foods.length;
+        if (cloudCount < localCount * 0.5) {
+         console.log('Auto-sync skipped: cloud has ' + cloudCount + ' items vs local ' + localCount + ', keeping local data');
+        } else {
+         foods = result.data.foods;
+         if (result.data.categories) categories = result.data.categories;
+         if (result.data.categoryEmojis) {
+          Object.keys(categoryEmojis).forEach(k => delete categoryEmojis[k]);
+          Object.assign(categoryEmojis, result.data.categoryEmojis);
+         }
+         renderCategories();
+         renderCategoryPills();
+         renderFoodList();
+         updateStats();
+         await saveToIndexedDB();
+         await saveLastSyncTime();
+         console.log('Auto-synced from cloud:', foods.length, 'items');
         }
         if (result.data.savedDocs && Array.isArray(result.data.savedDocs)) {
          savedDocs = result.data.savedDocs;
          await saveDocs();
         }
-        renderCategories();
-        renderCategoryPills();
-        renderFoodList();
-        updateStats();
-        await saveToIndexedDB();
-        await saveLastSyncTime();
-        console.log('Auto-synced from cloud:', foods.length, 'items');
        }
       }
      } catch (err) {
