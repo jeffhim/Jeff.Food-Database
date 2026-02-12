@@ -755,11 +755,15 @@ function openDatabase() {
     const foodStore = tx.objectStore('foods');
     const catStore = tx.objectStore('categories');
     const settingsStore = tx.objectStore('settings');
+    const builtInCount = foods.length;
     const loadedFoods = await _P(foodStore.getAll());
     const loadedCats = await _P(catStore.getAll());
     const loadedEmojis = await _P(settingsStore.get('categoryEmojis')).catch(()=>null);
-    if (loadedFoods && loadedFoods.length > 0) {
+    if (loadedFoods && loadedFoods.length > 0 && loadedFoods.length >= builtInCount * 0.5) {
      foods = loadedFoods;
+    } else if (loadedFoods && loadedFoods.length > 0 && loadedFoods.length < builtInCount * 0.5) {
+     console.log('IndexedDB only has ' + loadedFoods.length + ' items vs built-in ' + builtInCount + ', keeping built-in data');
+     saveToIndexedDB();
     }
     if (loadedCats && loadedCats.length > 0) {
      categories = loadedCats.map(c => c.name);
