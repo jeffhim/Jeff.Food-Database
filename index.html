@@ -70,7 +70,8 @@
     }
 
     html {
-      height: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
     }
 
     body {
@@ -79,7 +80,6 @@
       color: var(--text-primary);
       min-height: 100%;
       min-height: 100dvh;
-      overflow-x: hidden;
       /* iOS safe area support */
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
@@ -104,12 +104,9 @@
     .header {
       background: var(--header-gradient);
       padding: 16px 20px 20px;
-      position: fixed;
+      position: sticky;
       top: 0;
-      left: 0;
-      right: 0;
       z-index: 100;
-      box-sizing: border-box;
     }
 
     .header-top {
@@ -1331,7 +1328,6 @@
       <input type="text" id="searchInput" placeholder="搜尋食物或飲品...">
     </div>
   </header>
-  <div id="headerSpacer"></div>
 
   <!-- Main Content -->
   <main class="main-content">
@@ -2436,20 +2432,7 @@
     ];
 
     // Initialize
-    // Keep header spacer in sync with fixed header height
-    function updateHeaderSpacer() {
-      const header = document.querySelector('.header');
-      const spacer = document.getElementById('headerSpacer');
-      if (header && spacer) {
-        spacer.style.height = header.offsetHeight + 'px';
-      }
-    }
-
     document.addEventListener('DOMContentLoaded', async () => {
-      // Set header spacer height
-      updateHeaderSpacer();
-      window.addEventListener('resize', updateHeaderSpacer);
-
       // Try to load from IndexedDB first
       try {
         await openDatabase();
