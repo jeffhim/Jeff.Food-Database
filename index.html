@@ -755,15 +755,11 @@ function openDatabase() {
     const foodStore = tx.objectStore('foods');
     const catStore = tx.objectStore('categories');
     const settingsStore = tx.objectStore('settings');
-    const builtInCount = foods.length;
     const loadedFoods = await _P(foodStore.getAll());
     const loadedCats = await _P(catStore.getAll());
     const loadedEmojis = await _P(settingsStore.get('categoryEmojis')).catch(()=>null);
-    if (loadedFoods && loadedFoods.length > 0 && loadedFoods.length >= builtInCount * 0.5) {
+    if (loadedFoods && loadedFoods.length >= foods.length) {
      foods = loadedFoods;
-    } else if (loadedFoods && loadedFoods.length > 0 && loadedFoods.length < builtInCount * 0.5) {
-     console.log('IndexedDB only has ' + loadedFoods.length + ' items vs built-in ' + builtInCount + ', keeping built-in data');
-     saveToIndexedDB();
     }
     if (loadedCats && loadedCats.length > 0) {
      categories = loadedCats.map(c => c.name);
@@ -868,7 +864,7 @@ var p=r[4];if(p)f.per100g={calories:p[0],protein:p[1],fat:p[2],carbs:p[3],sodium
 var s=r[5];if(s)f.perServing={weight:s[0],calories:s[1],protein:s[2],fat:s[3],carbs:s[4],sodium:s[5],calcium:s[6]};
 return f;});};
 let foods = _F([
-['1','...','...','...',0,0],
+['1','奶皇包','Steamed egg custard bun','點心',[260,4.3,6.4,46,100,51],[46,120,2,3,22,47,24]],
 ['2','叉燒包','Steamed barbecued pork bun','點心',[270,7.3,7.3,43,290,18],[56,150,4.1,4.1,24,160,9.9]],
 ['3','蛋黃蓮蓉包','Steamed lotus seed paste and egg yolk bun','點心',[310,5.2,8.1,55,65,33],[55,170,2.9,4.5,30,36,18]],
 ['4','雞包仔','Steamed chicken bun','點心',[230,7.5,5.9,37,300,27],[52,120,3.9,3.1,19,160,14]],
@@ -1272,6 +1268,7 @@ let foods = _F([
 ['402','滋味齋','Assorted Vegetarian Delicacies','中式素菜',[127,N,7.7,N,410,N],[400,480,N,34,N,872,N]],
 ['403','芋頭魚','Vegetarian Taro Fish','中式素菜',[92,N,2,N,204,N],[255,669,N,18,N,588,N]]
 ]);
+const BUILT_IN_FOOD_COUNT = foods.length;
 document.addEventListener('DOMContentLoaded', async () => {
    try {
     await openDatabase();
@@ -1280,8 +1277,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const savedAutoSync = await loadAutoSyncSetting();
     autoSyncEnabled = savedAutoSync;
     setTimeout(autoSyncOnLoad, 1000);
-       } catch (err) {
-       }
+   } catch (err) {}
+   if (!foods || foods.length === 0) {
+    foods = _F([]);
+    console.log('Safety net: foods was empty, this should not happen');
+   }
    renderCategories();
    renderCategoryPills();
    renderFoodList();
