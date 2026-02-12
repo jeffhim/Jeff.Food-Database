@@ -1272,8 +1272,10 @@ document.addEventListener('DOMContentLoaded', async () => {
    try {
     await openDatabase();
     await loadFromIndexedDB();
+    await loadDocs();
     const savedAutoSync = await loadAutoSyncSetting();
     autoSyncEnabled = savedAutoSync;
+    setTimeout(autoSyncOnLoad, 1000);
        } catch (err) {
        }
    renderCategories();
@@ -4047,11 +4049,6 @@ document.addEventListener('DOMContentLoaded', async () => {
    }
    autoSyncEnabled = await loadAutoSyncSetting();
   }
-  const originalInitDB = initDB;
-  initDB = async function() {
-   await originalInitDB();
-   setTimeout(autoSyncOnLoad, 1000);
-  };
   const originalSaveToIndexedDB = saveToIndexedDB;
   saveToIndexedDB = async function() {
    await originalSaveToIndexedDB();
@@ -4353,17 +4350,6 @@ document.addEventListener('DOMContentLoaded', async () => {
    overlay.classList.add('active');
   }
 
-  // Load docs on startup
-  var _origDOMLoaded = null;
-  (function(){
-   var origListener = null;
-   // Patch: load docs after DB is ready
-   var _oldInitDB = initDB;
-   initDB = async function(){
-    await _oldInitDB();
-    await loadDocs();
-   };
-  })();
 </script>
 </body>
 </html>
