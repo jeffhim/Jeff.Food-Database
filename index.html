@@ -207,6 +207,41 @@ to{transform:rotate(360deg);}
 .dropdown-item.danger{color:#ef4444;}
 .dropdown-item.danger i{color:#ef4444;}
 .header-menu-container{position:relative;}
+.doc-list{display:flex;flex-direction:column;gap:12px;}
+.doc-card{background:var(--bg-card);border-radius:16px;padding:16px 18px;box-shadow:var(--card-shadow);cursor:pointer;transition:transform 0.15s ease;}
+.doc-card:active{transform:scale(0.98);}
+.doc-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.doc-card-title{font-size:17px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;}
+.doc-card-title i{color:#3b82f6;font-size:15px;}
+.doc-card-meta{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.doc-card-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.doc-card-tag{font-size:11px;padding:3px 8px;border-radius:8px;background:var(--bg-primary);color:var(--text-secondary);}
+.doc-card-tag.food{background:rgba(34,197,94,0.12);color:var(--accent);}
+.doc-card-tag.nut{background:rgba(168,85,247,0.12);color:var(--cal-color);}
+.doc-view-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;font-size:13px;margin-top:12px;}
+.doc-view-table thead th{background:var(--accent);color:white;padding:10px 8px;font-weight:600;text-align:center;white-space:nowrap;position:sticky;top:0;}
+.doc-view-table thead th:first-child{text-align:left;padding-left:12px;}
+.doc-view-table tbody td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--divider);color:var(--text-primary);}
+.doc-view-table tbody td:first-child{text-align:left;font-weight:600;padding-left:12px;white-space:nowrap;}
+.doc-view-table tbody tr:last-child td{border-bottom:none;}
+.doc-view-table tbody tr:nth-child(even){background:var(--bg-primary);}
+.doc-view-table tbody tr.doc-total-row{background:rgba(34,197,94,0.1);font-weight:700;}
+.doc-view-table tbody tr.doc-total-row td{border-top:2px solid var(--accent);}
+.food-picker-list{max-height:260px;overflow-y:auto;border:2px solid var(--divider);border-radius:12px;margin-top:8px;}
+.food-picker-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--divider);cursor:pointer;transition:background 0.15s;}
+.food-picker-item:last-child{border-bottom:none;}
+.food-picker-item:hover{background:var(--bg-primary);}
+.food-picker-item.selected{background:rgba(34,197,94,0.1);}
+.food-picker-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);}
+.food-picker-item-name{flex:1;font-size:14px;}
+.food-picker-item-cat{font-size:11px;color:var(--text-muted);}
+.nut-picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.nut-picker label{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:var(--bg-primary);cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s;border:2px solid transparent;}
+.nut-picker label.checked{border-color:var(--accent);background:rgba(34,197,94,0.1);}
+.nut-picker label input{display:none;}
+.doc-selected-foods{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:30px;}
+.doc-selected-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;background:rgba(34,197,94,0.12);color:var(--accent);font-size:12px;font-weight:500;}
+.doc-selected-chip button{background:none;border:none;color:var(--accent);cursor:pointer;padding:0 2px;font-size:14px;line-height:1;}
 </style>
 </head>
 <body>
@@ -234,6 +269,10 @@ to{transform:rotate(360deg);}
 <i class="fas fa-bars"></i>
 </button>
 <div class="dropdown-menu" id="dropdownMenu">
+<button class="dropdown-item" onclick="showDocumentsPage()">
+<i class="fas fa-folder-open"></i>
+<span>比較文件夾</span>
+</button>
 <button class="dropdown-item" onclick="showAIImport()">
 <i class="fas fa-robot"></i>
 <span>AI批量匯入</span>
@@ -357,6 +396,20 @@ Google 雲端同步
 </div>
 <div style="margin-top: 20px;">
 <button class="submit-btn" onclick="backToHome()">
+<i class="fas fa-arrow-left"></i> 返回主頁
+</button>
+</div>
+</div>
+<div class="page" id="docsPage">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+<h2 style="font-size:20px;font-weight:700;">📂 比較文件夾</h2>
+<button class="add-category-btn" onclick="openCreateDocModal()" style="display:flex;align-items:center;gap:6px;">
+<i class="fas fa-plus"></i> 新建文件
+</button>
+</div>
+<div class="doc-list" id="docList"></div>
+<div style="margin-top:20px;">
+<button class="submit-btn" onclick="goToHomePage()">
 <i class="fas fa-arrow-left"></i> 返回主頁
 </button>
 </div>
@@ -569,6 +622,67 @@ Google 雲端同步
 </div>
 </div>
 <input type="file" class="hidden-input" id="importInput" accept=".json" onchange="importData(event)">
+<div class="modal-overlay" id="createDocModal">
+<div class="modal">
+<div class="modal-header">
+<span class="modal-title"><i class="fas fa-file-medical"></i> 新建比較文件</span>
+<button class="modal-close" onclick="closeCreateDocModal()"><i class="fas fa-times"></i></button>
+</div>
+<div class="modal-body">
+<div class="form-group">
+<label class="form-label">文件名稱</label>
+<input type="text" class="form-input" id="docNameInput" placeholder="例如：早餐選擇比較">
+</div>
+<div class="form-group">
+<label class="form-label">顯示模式</label>
+<div class="input-mode-toggle">
+<button type="button" class="input-mode-btn active" id="docModePer100g" onclick="setDocMode('per100g')">每 100g</button>
+<button type="button" class="input-mode-btn" id="docModePerServing" onclick="setDocMode('perServing')">每食用份量</button>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">選擇營養素</label>
+<div class="nut-picker" id="nutPicker">
+<label class="checked"><input type="checkbox" value="calories" checked onchange="toggleNutPick(this)">卡路里</label>
+<label class="checked"><input type="checkbox" value="protein" checked onchange="toggleNutPick(this)">蛋白質</label>
+<label class="checked"><input type="checkbox" value="fat" checked onchange="toggleNutPick(this)">脂肪</label>
+<label class="checked"><input type="checkbox" value="carbs" checked onchange="toggleNutPick(this)">碳水</label>
+<label><input type="checkbox" value="sodium" onchange="toggleNutPick(this)">鈉</label>
+<label><input type="checkbox" value="calcium" onchange="toggleNutPick(this)">鈣</label>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">選擇食物</label>
+<div style="position:relative;">
+<input type="text" class="form-input" id="docFoodSearch" placeholder="搜尋食物..." oninput="filterDocFoodList()">
+</div>
+<div class="doc-selected-foods" id="docSelectedFoods"></div>
+<div class="food-picker-list" id="docFoodPicker"></div>
+</div>
+<div class="form-group">
+<label class="form-label">備註 (選填)</label>
+<input type="text" class="form-input" id="docNotesInput" placeholder="例如：減肥期間參考">
+</div>
+<button type="button" class="submit-btn" onclick="saveDocument()"><i class="fas fa-save"></i> 儲存文件</button>
+</div>
+</div>
+</div>
+<div class="modal-overlay" id="viewDocModal">
+<div class="modal">
+<div class="modal-header">
+<span class="modal-title" id="viewDocTitle">文件</span>
+<button class="modal-close" onclick="closeViewDocModal()"><i class="fas fa-times"></i></button>
+</div>
+<div class="modal-body">
+<div id="viewDocMeta" style="margin-bottom:12px;"></div>
+<div id="viewDocTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
+<div style="display:flex;gap:10px;margin-top:20px;">
+<button type="button" class="submit-btn" onclick="editCurrentDoc()" style="flex:1;background:#3b82f6;"><i class="fas fa-edit"></i> 編輯</button>
+<button type="button" class="submit-btn" onclick="deleteCurrentDoc()" style="flex:1;background:#ef4444;"><i class="fas fa-trash"></i> 刪除</button>
+</div>
+</div>
+</div>
+</div>
 <script>
   const DB_NAME = 'NutritionDB';
   const DB_VERSION = 1;
@@ -1147,14 +1261,14 @@ let foods = _F([
 ['395','粟米素魚塊','Vegetarian Corn Fish Fillet','中式素菜',[102,N,5.6,N,376,N],[383,373,N,23,N,1490,N]],
 ['396','齋鹵味拼盤','Vegetarian Braised Platter','中式素菜',[174,N,7.4,N,355,N],[585,906,N,37,N,2030,N]],
 ['397','素魚香茄子','Vegetarian Fish-flavoured Eggplant','中式素菜',[68,N,7.8,N,350,N],[477,289,N,22,N,1476,N]],
-['398','羅漢齋','Lo Han Jai (Buddha\\'s Delight)','中式素菜',[67,N,5.5,N,330,N],[519,336,N,20,N,1830,N]],
+['398','羅漢齋','Lo Han Jai (Buddha\'s Delight)','中式素菜',[67,N,5.5,N,330,N],[519,336,N,20,N,1830,N]],
 ['399','素福建炒飯','Vegetarian Fujian Fried Rice','中式素菜',[120,N,3.9,N,290,N],[835,899,N,27,N,2440,N]],
 ['400','紅燒豆腐','Braised Tofu','中式素菜',[92,N,5.5,N,313,N],[387,234,N,13,N,809,N]],
 ['401','菠蘿素咕嚕肉','Vegetarian Sweet and Sour Pork with Pineapple','中式素菜',[116,N,6.5,N,317,N],[428,510,N,17,N,653,N]],
 ['402','滋味齋','Assorted Vegetarian Delicacies','中式素菜',[127,N,7.7,N,410,N],[400,480,N,34,N,872,N]],
 ['403','芋頭魚','Vegetarian Taro Fish','中式素菜',[92,N,2,N,204,N],[255,669,N,18,N,588,N]]
-]);;
-  document.addEventListener('DOMContentLoaded', async () => {
+]);
+document.addEventListener('DOMContentLoaded', async () => {
    try {
     await openDatabase();
     await loadFromIndexedDB();
@@ -3718,6 +3832,7 @@ let foods = _F([
      foods: foods,
      categories: categories,
      categoryEmojis: categoryEmojis,
+     savedDocs: savedDocs,
      lastUpdated: new Date().toISOString()
     };
     const response = await fetch(url, {
@@ -3768,6 +3883,10 @@ let foods = _F([
      Object.keys(categoryEmojis).forEach(k => delete categoryEmojis[k]);
      Object.assign(categoryEmojis, data.categoryEmojis);
     }
+    if (data.savedDocs && Array.isArray(data.savedDocs)) {
+     savedDocs = data.savedDocs;
+     saveDocs();
+    }
     renderCategories();
     renderCategoryPills();
     renderFoodList();
@@ -3800,6 +3919,7 @@ let foods = _F([
      foods: foods,
      categories: categories,
      categoryEmojis: categoryEmojis,
+     savedDocs: savedDocs,
      lastUpdated: new Date().toISOString()
     };
         showToast('正在自動同步...', 1000);
@@ -3908,6 +4028,10 @@ let foods = _F([
         Object.keys(categoryEmojis).forEach(k => delete categoryEmojis[k]);
         Object.assign(categoryEmojis, result.data.categoryEmojis);
        }
+       if (result.data.savedDocs && Array.isArray(result.data.savedDocs)) {
+        savedDocs = result.data.savedDocs;
+        saveDocs();
+       }
        renderCategories();
        renderCategoryPills();
        renderFoodList();
@@ -3934,6 +4058,312 @@ let foods = _F([
    clearTimeout(window.autoUploadTimeout);
    window.autoUploadTimeout = setTimeout(autoUploadIfEnabled, 2000);
   };
+
+  /* ===== Document / Folder Feature ===== */
+  let savedDocs = [];
+  let docSelectedFoodIds = [];
+  let docMode = 'per100g';
+  let editingDocId = null;
+  let viewingDocId = null;
+  const NUT_META = {
+   calories: {label:'卡路里', unit:'kcal', color:'var(--cal-color)'},
+   protein: {label:'蛋白質', unit:'g', color:'var(--protein-color)'},
+   fat: {label:'脂肪', unit:'g', color:'var(--fat-color)'},
+   carbs: {label:'碳水', unit:'g', color:'var(--carbs-color)'},
+   sodium: {label:'鈉', unit:'mg', color:'var(--sodium-color)'},
+   calcium: {label:'鈣', unit:'mg', color:'var(--calcium-color)'}
+  };
+
+  async function loadDocs() {
+   if (!db) { savedDocs = memorySettings.docs || []; return; }
+   try {
+    var tx = db.transaction(['settings'],'readonly');
+    var r = await _P(tx.objectStore('settings').get('savedDocs')).catch(function(){return null;});
+    if (r && r.value) savedDocs = r.value;
+   } catch(e) { savedDocs = []; }
+  }
+  async function saveDocs() {
+   if (!db) { memorySettings.docs = savedDocs; return; }
+   try {
+    var tx = db.transaction(['settings'],'readwrite');
+    tx.objectStore('settings').put({key:'savedDocs', value:JSON.parse(JSON.stringify(savedDocs))});
+   } catch(e) {}
+   if (typeof autoUploadIfEnabled === 'function') {
+    clearTimeout(window.autoUploadTimeout);
+    window.autoUploadTimeout = setTimeout(autoUploadIfEnabled, 2000);
+   }
+  }
+
+  function showDocumentsPage() {
+   document.getElementById('dropdownMenu').classList.remove('show');
+   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+   document.getElementById('docsPage').classList.add('active');
+   document.getElementById('fab').style.display = 'none';
+   document.getElementById('homeBtn').style.display = 'flex';
+   renderDocList();
+  }
+  function renderDocList() {
+   var c = document.getElementById('docList');
+   if (!savedDocs.length) {
+    c.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><h3>未有文件</h3><p>建立比較文件，將不同食物的營養並排比較</p></div>';
+    return;
+   }
+   c.innerHTML = savedDocs.map(function(doc){
+    var nutLabels = (doc.nutrients||[]).map(function(k){return NUT_META[k]?NUT_META[k].label:k;});
+    var foodNames = (doc.foodIds||[]).map(function(id){var f=foods.find(function(x){return x.id===id;});return f?f.name:'?';});
+    var dateStr = doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('zh-HK') : '';
+    return '<div class="doc-card" onclick="viewDocument(\''+doc.id+'\')">' +
+     '<div class="doc-card-top"><div class="doc-card-title"><i class="fas fa-file-alt"></i>'+_esc(doc.name)+'</div></div>' +
+     '<div class="doc-card-meta"><i class="fas fa-calendar"></i> '+dateStr+' · <i class="fas fa-utensils"></i> '+doc.foodIds.length+'項 · '+(doc.mode==='per100g'?'每100g':'每份')+'</div>' +
+     '<div class="doc-card-tags">' +
+      foodNames.slice(0,4).map(function(n){return '<span class="doc-card-tag food">'+_esc(n)+'</span>';}).join('') +
+      (foodNames.length>4?'<span class="doc-card-tag">+' + (foodNames.length-4) + '</span>':'') +
+      nutLabels.map(function(n){return '<span class="doc-card-tag nut">'+n+'</span>';}).join('') +
+     '</div>' +
+     (doc.notes?'<div style="margin-top:6px;font-size:12px;color:var(--text-muted);">📝 '+_esc(doc.notes)+'</div>':'') +
+    '</div>';
+   }).join('');
+  }
+  function _esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+  /* Create / Edit Document Modal */
+  function openCreateDocModal() {
+   editingDocId = null;
+   docSelectedFoodIds = [];
+   docMode = 'per100g';
+   document.getElementById('docNameInput').value = '';
+   document.getElementById('docNotesInput').value = '';
+   document.getElementById('docFoodSearch').value = '';
+   document.getElementById('docModePer100g').classList.add('active');
+   document.getElementById('docModePerServing').classList.remove('active');
+   // Reset nutrient checkboxes
+   document.querySelectorAll('#nutPicker input').forEach(function(cb){
+    var def = ['calories','protein','fat','carbs'].indexOf(cb.value) >= 0;
+    cb.checked = def;
+    cb.parentElement.classList.toggle('checked', def);
+   });
+   renderDocFoodPicker();
+   renderDocSelectedChips();
+   document.getElementById('createDocModal').classList.add('active');
+  }
+  function closeCreateDocModal() {
+   document.getElementById('createDocModal').classList.remove('active');
+  }
+  function setDocMode(m) {
+   docMode = m;
+   document.getElementById('docModePer100g').classList.toggle('active', m==='per100g');
+   document.getElementById('docModePerServing').classList.toggle('active', m==='perServing');
+  }
+  function toggleNutPick(cb) {
+   cb.parentElement.classList.toggle('checked', cb.checked);
+  }
+
+  function renderDocFoodPicker() {
+   var search = (document.getElementById('docFoodSearch').value || '').toLowerCase();
+   var list = foods.filter(function(f){
+    if (!search) return true;
+    return f.name.toLowerCase().indexOf(search)>=0 || (f.nameEn||'').toLowerCase().indexOf(search)>=0;
+   });
+   var c = document.getElementById('docFoodPicker');
+   c.innerHTML = list.slice(0, 100).map(function(f){
+    var sel = docSelectedFoodIds.indexOf(f.id) >= 0;
+    var emoji = categoryEmojis[f.category] || '';
+    return '<div class="food-picker-item'+(sel?' selected':'')+'" onclick="toggleDocFood(\''+f.id+'\')">' +
+     '<input type="checkbox" '+(sel?'checked':'')+' tabindex="-1">' +
+     '<span class="food-picker-item-name">'+(emoji?emoji+' ':'')+_esc(f.name)+'</span>' +
+     '<span class="food-picker-item-cat">'+_esc(f.category)+'</span>' +
+    '</div>';
+   }).join('');
+   if (list.length > 100) c.innerHTML += '<div style="padding:10px;text-align:center;color:var(--text-muted);font-size:12px;">顯示前100項，請用搜尋縮窄範圍</div>';
+  }
+  function filterDocFoodList() { renderDocFoodPicker(); }
+  function toggleDocFood(id) {
+   var idx = docSelectedFoodIds.indexOf(id);
+   if (idx >= 0) docSelectedFoodIds.splice(idx, 1);
+   else docSelectedFoodIds.push(id);
+   renderDocFoodPicker();
+   renderDocSelectedChips();
+  }
+  function renderDocSelectedChips() {
+   var c = document.getElementById('docSelectedFoods');
+   if (!docSelectedFoodIds.length) { c.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">尚未選擇食物</span>'; return; }
+   c.innerHTML = docSelectedFoodIds.map(function(id){
+    var f = foods.find(function(x){return x.id===id;});
+    var name = f ? f.name : '?';
+    return '<span class="doc-selected-chip">'+_esc(name)+' <button onclick="event.stopPropagation();toggleDocFood(\''+id+'\')">&times;</button></span>';
+   }).join('');
+  }
+
+  function saveDocument() {
+   var name = document.getElementById('docNameInput').value.trim();
+   if (!name) { showToast('請輸入文件名稱'); return; }
+   if (!docSelectedFoodIds.length) { showToast('請至少選擇一個食物'); return; }
+   var nutrients = [];
+   document.querySelectorAll('#nutPicker input:checked').forEach(function(cb){ nutrients.push(cb.value); });
+   if (!nutrients.length) { showToast('請至少選擇一項營養素'); return; }
+   var notes = document.getElementById('docNotesInput').value.trim();
+   if (editingDocId) {
+    var doc = savedDocs.find(function(d){return d.id===editingDocId;});
+    if (doc) {
+     doc.name = name;
+     doc.foodIds = docSelectedFoodIds.slice();
+     doc.nutrients = nutrients;
+     doc.mode = docMode;
+     doc.notes = notes;
+     doc.updatedAt = Date.now();
+    }
+   } else {
+    savedDocs.unshift({
+     id: 'doc_' + Date.now(),
+     name: name,
+     foodIds: docSelectedFoodIds.slice(),
+     nutrients: nutrients,
+     mode: docMode,
+     notes: notes,
+     createdAt: Date.now()
+    });
+   }
+   saveDocs();
+   closeCreateDocModal();
+   renderDocList();
+   showToast(editingDocId ? '文件已更新' : '文件已建立');
+  }
+
+  /* View Document */
+  function viewDocument(docId) {
+   var doc = savedDocs.find(function(d){return d.id===docId;});
+   if (!doc) return;
+   viewingDocId = docId;
+   document.getElementById('viewDocTitle').innerHTML = '<i class="fas fa-file-alt" style="color:#3b82f6;"></i> ' + _esc(doc.name);
+   var dateStr = doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('zh-HK',{year:'numeric',month:'long',day:'numeric'}) : '';
+   var modeStr = doc.mode === 'per100g' ? '每 100g' : '每食用份量';
+   document.getElementById('viewDocMeta').innerHTML =
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--text-secondary);font-size:13px;">' +
+    (dateStr ? '<span><i class="fas fa-calendar"></i> ' + dateStr + '</span>' : '') +
+    '<span><i class="fas fa-balance-scale"></i> ' + modeStr + '</span>' +
+    '<span><i class="fas fa-utensils"></i> ' + doc.foodIds.length + ' 項食物</span>' +
+    '</div>' +
+    (doc.notes ? '<div style="margin-top:8px;font-size:13px;color:var(--text-muted);"><i class="fas fa-sticky-note"></i> ' + _esc(doc.notes) + '</div>' : '');
+
+   // Build comparison table
+   var nuts = doc.nutrients || [];
+   var foodList = doc.foodIds.map(function(id){ return foods.find(function(x){return x.id===id;}); }).filter(Boolean);
+   var html = '<table class="doc-view-table"><thead><tr><th>食物</th>';
+   nuts.forEach(function(k){
+    var m = NUT_META[k];
+    html += '<th>' + (m?m.label:k) + '<br><span style="font-weight:400;font-size:10px;opacity:0.8;">(' + (m?m.unit:'') + ')</span></th>';
+   });
+   html += '</tr></thead><tbody>';
+   var totals = {};
+   nuts.forEach(function(k){ totals[k] = 0; });
+   foodList.forEach(function(f){
+    var data = doc.mode === 'per100g' ? (f.per100g||{}) : null;
+    if (doc.mode === 'perServing') {
+     var ps = f.perServing;
+     var p100 = f.per100g;
+     if (ps && ps.weight && p100) {
+      data = {};
+      var w = ps.weight;
+      nuts.forEach(function(k){
+       var psv = ps[k];
+       if (psv !== null && psv !== undefined) { data[k] = psv; }
+       else if (p100[k] !== null && p100[k] !== undefined) { data[k] = Math.round(p100[k]*w/100*10)/10; }
+       else { data[k] = null; }
+      });
+      data._weight = w;
+     } else if (ps) { data = ps; }
+     else { data = p100 || {}; }
+    }
+    if (!data) data = {};
+    var emoji = categoryEmojis[f.category] || '';
+    html += '<tr><td>' + (emoji?emoji+' ':'') + _esc(f.name);
+    if (doc.mode==='perServing' && data._weight) html += '<br><span style="font-size:10px;color:var(--text-muted);">' + data._weight + 'g</span>';
+    html += '</td>';
+    nuts.forEach(function(k){
+     var v = data[k];
+     var display = (v !== null && v !== undefined) ? (k==='calories'||k==='sodium'||k==='calcium'? Math.round(v) : Math.round(v*10)/10) : '--';
+     if (typeof display === 'number') totals[k] += display;
+     var m = NUT_META[k];
+     html += '<td style="color:'+(m?m.color:'inherit')+';font-weight:600;">'+display+'</td>';
+    });
+    html += '</tr>';
+   });
+   // Total / average row
+   if (foodList.length > 1) {
+    html += '<tr class="doc-total-row"><td>合計</td>';
+    nuts.forEach(function(k){
+     var v = totals[k];
+     var display = k==='calories'||k==='sodium'||k==='calcium' ? Math.round(v) : Math.round(v*10)/10;
+     html += '<td>'+display+'</td>';
+    });
+    html += '</tr>';
+    html += '<tr class="doc-total-row" style="opacity:0.7;"><td>平均</td>';
+    nuts.forEach(function(k){
+     var v = totals[k] / foodList.length;
+     var display = k==='calories'||k==='sodium'||k==='calcium' ? Math.round(v) : Math.round(v*10)/10;
+     html += '<td>'+display+'</td>';
+    });
+    html += '</tr>';
+   }
+   html += '</tbody></table>';
+   document.getElementById('viewDocTableWrap').innerHTML = html;
+   document.getElementById('viewDocModal').classList.add('active');
+  }
+  function closeViewDocModal() {
+   document.getElementById('viewDocModal').classList.remove('active');
+   viewingDocId = null;
+  }
+  function editCurrentDoc() {
+   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
+   if (!doc) return;
+   closeViewDocModal();
+   editingDocId = doc.id;
+   docSelectedFoodIds = doc.foodIds.slice();
+   docMode = doc.mode || 'per100g';
+   document.getElementById('docNameInput').value = doc.name;
+   document.getElementById('docNotesInput').value = doc.notes || '';
+   document.getElementById('docFoodSearch').value = '';
+   document.getElementById('docModePer100g').classList.toggle('active', docMode==='per100g');
+   document.getElementById('docModePerServing').classList.toggle('active', docMode==='perServing');
+   document.querySelectorAll('#nutPicker input').forEach(function(cb){
+    var on = (doc.nutrients||[]).indexOf(cb.value) >= 0;
+    cb.checked = on;
+    cb.parentElement.classList.toggle('checked', on);
+   });
+   renderDocFoodPicker();
+   renderDocSelectedChips();
+   document.getElementById('createDocModal').classList.add('active');
+  }
+  function deleteCurrentDoc() {
+   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
+   if (!doc) return;
+   // Show confirm
+   var overlay = document.getElementById('confirmModal');
+   document.getElementById('confirmTitle').textContent = '確認刪除？';
+   document.getElementById('confirmMessage').textContent = '確定要刪除「' + doc.name + '」？此操作無法復原。';
+   var btn = document.getElementById('confirmAction');
+   btn.onclick = function(){
+    savedDocs = savedDocs.filter(function(d){return d.id!==viewingDocId;});
+    saveDocs();
+    closeConfirmModal();
+    closeViewDocModal();
+    renderDocList();
+    showToast('文件已刪除');
+   };
+   overlay.classList.add('active');
+  }
+
+  // Load docs on startup
+  var _origDOMLoaded = null;
+  (function(){
+   var origListener = null;
+   // Patch: load docs after DB is ready
+   var _oldInitDB = initDB;
+   initDB = async function(){
+    await _oldInitDB();
+    await loadDocs();
+   };
+  })();
 </script>
 </body>
 </html>
