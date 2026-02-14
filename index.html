@@ -42,7 +42,7 @@ body{font-family:'Noto Sans HK',-apple-system,BlinkMacSystemFont,sans-serif;back
 .search-bar i{color:rgba(255,255,255,0.7);font-size:16px;}
 .search-bar input{flex:1;border:none;background:transparent;font-size:16px;color:white;outline:none;font-family:inherit;}
 .search-bar input::placeholder{color:rgba(255,255,255,0.6);}
-.main-content{padding:16px;padding-bottom:100px;padding-top:130px;}
+.main-content{padding:16px;padding-bottom:100px;}
 .category-pills{display:flex;gap:10px;overflow-x:auto;padding:4px 0 20px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 .category-pills::-webkit-scrollbar{display:none;}
 .category-pill{flex-shrink:0;padding:10px 18px;border-radius:25px;background:var(--pill-bg);color:var(--text-secondary);font-size:14px;font-weight:500;border:none;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
@@ -1322,7 +1322,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    const header = document.querySelector('.header');
    const main = document.querySelector('.main-content');
    if (header && main) {
-    main.style.paddingTop = (header.offsetHeight + 12) + 'px';
+    main.style.paddingTop = (header.offsetHeight + 4) + 'px';
    }
   }
   function setupEventListeners() {
