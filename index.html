@@ -460,6 +460,18 @@ Google 雲端同步
 <input type="text" class="form-input" id="newCategoryEmoji" placeholder="Emoji" style="width: 70px;">
 </div>
 </div>
+<div class="form-group">
+<label class="form-label">資料來源 (選填)</label>
+<select class="form-select" id="foodSource">
+<option value="營養標籤" selected>營養標籤</option>
+<option value="食安中心">食安中心</option>
+<option value="營養資料庫">營養資料庫</option>
+<option value="餐廳菜單">餐廳菜單</option>
+<option value="自行估計">自行估計</option>
+<option value="AI識別">AI識別</option>
+<option value="其他">其他</option>
+</select>
+</div>
 <div class="form-section-title">營養資料輸入方式</div>
 <div class="input-mode-toggle">
 <button type="button" class="input-mode-btn active" id="inputModePer100g" onclick="setInputMode('per100g')">
@@ -558,6 +570,17 @@ Google 雲端同步
 <div style="display: flex; gap: 8px;">
 <input type="text" class="form-input" id="aiNewCategory" placeholder="例如：日式料理">
 <input type="text" class="form-input" id="aiNewCategoryEmoji" placeholder="🍱" style="width: 60px; text-align: center;">
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">營養資料格式</label>
+<div class="input-mode-toggle">
+<button type="button" class="input-mode-btn active" id="aiInputModePer100g" onclick="setAIInputMode('per100g')">
+每 100g
+</button>
+<button type="button" class="input-mode-btn" id="aiInputModePerServing" onclick="setAIInputMode('perServing')">
+每食用份量
+</button>
 </div>
 </div>
 <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
@@ -856,6 +879,7 @@ function openDatabase() {
   let currentFilter = '全部';
   let showPer100gSet = new Set();
   let formInputMode = 'per100g';
+  let aiImportInputMode = 'per100g';
   let cloudSyncUrl = '';
   const N=null;
 const _F=function(d){return d.map(function(r){
@@ -1471,7 +1495,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      </div>
      <div class="food-footer">
       <i class="fas fa-info-circle"></i>
-      <span>${food.nameEn || food.name} | ${food.category === '麥當勞' ? '麥當勞香港' : '食環署報告'}</span>
+      <span>${food.nameEn || food.name} | ${food.source || (food.category === '麥當勞' ? '麥當勞香港' : '食安中心')}</span>
      </div>
     </div>
    `}).join('');
@@ -1613,6 +1637,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     nutritionTitle.textContent = '營養資料 (每食用份量)';
    }
   }
+  function setAIInputMode(mode) {
+   aiImportInputMode = mode;
+   const per100gBtn = document.getElementById('aiInputModePer100g');
+   const perServingBtn = document.getElementById('aiInputModePerServing');
+   if (mode === 'per100g') {
+    per100gBtn.classList.add('active');
+    perServingBtn.classList.remove('active');
+   } else {
+    per100gBtn.classList.remove('active');
+    perServingBtn.classList.add('active');
+   }
+  }
   function toggleNewCategoryInput() {
    const select = document.getElementById('foodCategory');
    const newCategoryGroup = document.getElementById('newCategoryGroup');
@@ -1630,6 +1666,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('submitBtn').textContent = '儲存';
    document.getElementById('foodForm').reset();
    document.getElementById('editId').value = '';
+   document.getElementById('foodSource').value = '營養標籤';
    setInputMode('per100g');
    clearScanPreview();
    document.getElementById('newCategoryGroup').style.display = 'none';
@@ -2057,6 +2094,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('foodName').value = food.name;
    document.getElementById('foodNameEn').value = food.nameEn || '';
    document.getElementById('foodCategory').value = food.category;
+   document.getElementById('foodSource').value = food.source || '營養標籤';
    const displayVal = (val) => val !== null && val !== undefined ? val : '';
    const p = food.per100g || {};
    const ps = food.perServing;
@@ -2108,6 +2146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('servingWeight').focus();
     return;
    }
+   const selectedSource = document.getElementById('foodSource').value;
    const parseNutritionValue = (id) => {
     const value = document.getElementById(id).value.trim();
     if (value === '') return null;
@@ -2147,6 +2186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      name: document.getElementById('foodName').value.trim(),
      nameEn: document.getElementById('foodNameEn').value.trim() || null,
      category: selectedCategory,
+     source: selectedSource,
      per100g: nutritionData,
      perServing: perServingData
     };
@@ -2162,6 +2202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      name: document.getElementById('foodName').value.trim(),
      nameEn: document.getElementById('foodNameEn').value.trim() || null,
      category: selectedCategory,
+     source: selectedSource,
      per100g: {
       calories: toPer100g(nutritionData.calories),
       protein: toPer100g(nutritionData.protein, 1),
@@ -2333,6 +2374,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
    document.getElementById('aiNewCategory').value = '';
    document.getElementById('aiNewCategoryEmoji').value = '';
+   setAIInputMode('per100g');
    clearAIImportPreview();
    clearFileImport();
    document.getElementById('aiImportStatus').style.display = 'none';
@@ -2483,39 +2525,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (calories !== null && calories > 900) {
      calories = Math.round(calories / 4.184);
     }
-    const food = {
+    const servingWeight = parseNum(row[colMap.servingWeight]);
+    const nutritionData = {
+     calories: calories,
+     protein: parseNum(row[colMap.protein]),
+     fat: parseNum(row[colMap.fat]),
+     carbs: parseNum(row[colMap.carbs]),
+     sodium: parseNum(row[colMap.sodium]),
+     calcium: parseNum(row[colMap.calcium])
+    };
+    let food = {
      name: name,
      nameEn: colMap.nameEn !== -1 ? (row[colMap.nameEn] ? String(row[colMap.nameEn]).trim() : null) : null,
-     per100g: {
-      calories: calories,
-      protein: parseNum(row[colMap.protein]),
-      fat: parseNum(row[colMap.fat]),
-      carbs: parseNum(row[colMap.carbs]),
-      sodium: parseNum(row[colMap.sodium]),
-      calcium: parseNum(row[colMap.calcium])
-     },
+     per100g: null,
      perServing: null
     };
-    const servingWeight = parseNum(row[colMap.servingWeight]);
-    if (servingWeight && servingWeight > 0) {
-     food.perServing = {
-      weight: servingWeight,
-      calories: food.per100g.calories,
-      protein: food.per100g.protein,
-      fat: food.per100g.fat,
-      carbs: food.per100g.carbs,
-      sodium: food.per100g.sodium,
-      calcium: food.per100g.calcium
-     };
-     const toPer100g = (val) => val !== null ? Math.round(val / servingWeight * 100 * 10) / 10 : null;
-     food.per100g = {
-      calories: toPer100g(food.perServing.calories),
-      protein: toPer100g(food.perServing.protein),
-      fat: toPer100g(food.perServing.fat),
-      carbs: toPer100g(food.perServing.carbs),
-      sodium: toPer100g(food.perServing.sodium),
-      calcium: toPer100g(food.perServing.calcium)
-     };
+
+    if (aiImportInputMode === 'per100g') {
+     food.per100g = nutritionData;
+     if (servingWeight && servingWeight > 0) {
+      const toPerServing = (val) => val !== null ? Math.round(val * servingWeight / 100 * 10) / 10 : null;
+      food.perServing = {
+       weight: servingWeight,
+       calories: toPerServing(nutritionData.calories),
+       protein: toPerServing(nutritionData.protein),
+       fat: toPerServing(nutritionData.fat),
+       carbs: toPerServing(nutritionData.carbs),
+       sodium: toPerServing(nutritionData.sodium),
+       calcium: toPerServing(nutritionData.calcium)
+      };
+     }
+    } else {
+     if (!servingWeight || servingWeight <= 0) {
+      food.perServing = {
+       weight: null,
+       ...nutritionData
+      };
+      food.per100g = {
+       calories: null,
+       protein: null,
+       fat: null,
+       carbs: null,
+       sodium: null,
+       calcium: null
+      };
+     } else {
+      food.perServing = {
+       weight: servingWeight,
+       ...nutritionData
+      };
+      const toPer100g = (val) => val !== null ? Math.round(val / servingWeight * 100 * 10) / 10 : null;
+      food.per100g = {
+       calories: toPer100g(nutritionData.calories),
+       protein: toPer100g(nutritionData.protein),
+       fat: toPer100g(nutritionData.fat),
+       carbs: toPer100g(nutritionData.carbs),
+       sodium: toPer100g(nutritionData.sodium),
+       calcium: toPer100g(nutritionData.calcium)
+      };
+     }
     }
     foods.push(food);
    }
@@ -2617,19 +2685,29 @@ document.addEventListener('DOMContentLoaded', async () => {
      };
      let cal = getNum(colMap.calories);
      if (cal !== null && cal > 900) cal = Math.round(cal / 4.184);
-     foods.push({
-      name: name,
-      nameEn: null,
-      per100g: {
-       calories: cal,
-       protein: getNum(colMap.protein),
-       fat: getNum(colMap.fat),
-       carbs: getNum(colMap.carbs),
-       sodium: getNum(colMap.sodium),
-       calcium: getNum(colMap.calcium)
-      },
-      perServing: null
-     });
+     const nutritionData = {
+      calories: cal,
+      protein: getNum(colMap.protein),
+      fat: getNum(colMap.fat),
+      carbs: getNum(colMap.carbs),
+      sodium: getNum(colMap.sodium),
+      calcium: getNum(colMap.calcium)
+     };
+     let food = { name: name, nameEn: null, per100g: null, perServing: null };
+     if (aiImportInputMode === 'per100g') {
+      food.per100g = nutritionData;
+     } else {
+      food.perServing = { weight: null, ...nutritionData };
+      food.per100g = {
+       calories: null,
+       protein: null,
+       fat: null,
+       carbs: null,
+       sodium: null,
+       calcium: null
+      };
+     }
+     foods.push(food);
     } else {
      const nameMatch = line.match(/^(.+?)\s+(\d+(?:\.\d+)?)/);
      if (nameMatch) {
@@ -2640,19 +2718,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!nums || nums.length < 1) continue;
       let cal = parseFloat(nums[0]);
       if (cal > 900) cal = Math.round(cal / 4.184);
-      foods.push({
-       name: foodName,
-       nameEn: null,
-       per100g: {
-        calories: cal,
-        protein: nums[1] ? parseFloat(nums[1]) : null,
-        fat: nums[2] ? parseFloat(nums[2]) : null,
-        carbs: nums[3] ? parseFloat(nums[3]) : null,
-        sodium: nums[4] ? parseFloat(nums[4]) : null,
-        calcium: nums[5] ? parseFloat(nums[5]) : null
-       },
-       perServing: null
-      });
+      const nutritionData = {
+       calories: cal,
+       protein: nums[1] ? parseFloat(nums[1]) : null,
+       fat: nums[2] ? parseFloat(nums[2]) : null,
+       carbs: nums[3] ? parseFloat(nums[3]) : null,
+       sodium: nums[4] ? parseFloat(nums[4]) : null,
+       calcium: nums[5] ? parseFloat(nums[5]) : null
+      };
+      let food = { name: foodName, nameEn: null, per100g: null, perServing: null };
+      if (aiImportInputMode === 'per100g') {
+       food.per100g = nutritionData;
+      } else {
+       food.perServing = { weight: null, ...nutritionData };
+       food.per100g = {
+        calories: null,
+        protein: null,
+        fat: null,
+        carbs: null,
+        sodium: null,
+        calcium: null
+       };
+      }
+      foods.push(food);
      }
     }
    }
