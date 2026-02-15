@@ -18,7 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
-:root{--bg-primary:#f0f2f5;--bg-secondary:#ffffff;--bg-card:#ffffff;--text-primary:#1a1a2e;--text-secondary:#6b7280;--text-muted:#9ca3af;--accent:#22c55e;--accent-dark:#16a34a;--header-gradient:linear-gradient(135deg,#166534 0%,#15803d 50%,#22c55e 100%);--divider:rgba(0,0,0,0.06);--card-shadow:0 2px 8px rgba(0,0,0,0.06);--pill-bg:#e5e7eb;--pill-active:#22c55e;--search-bg:rgba(255,255,255,0.15);--cal-color:#a855f7;--protein-color:#eab308;--fat-color:#f97316;--carbs-color:#06b6d4;--sodium-color:#ec4899;--calcium-color:#22c55e;}
+:root{--bg-primary:#f0f2f5;--bg-secondary:#ffffff;--bg-card:#ffffff;--text-primary:#1a1a2e;--text-secondary:#6b7280;--text-muted:#9ca3af;--accent:#22c55e;--accent-dark:#16a34a;--header-gradient:linear-gradient(135deg,#166534 0%,#15803d 50%,#22c55e 100%);--divider:rgba(0,0,0,0.06);--card-shadow:0 2px 8px rgba(0,0,0,0.06);--pill-bg:#e5e7eb;--pill-active:#22c55e;--search-bg:rgba(255,255,255,0.15);--cal-color:#a855f7;--protein-color:#eab308;--fat-color:#f97316;--carbs-color:#06b6d4;--sodium-color:#ec4899;--calcium-color:#22c55e;--sugar-color:#ec4899;--fiber-color:#10b981;}
 .dark{--bg-primary:#0f0f1a;--bg-secondary:#1a1a2e;--bg-card:#252542;--text-primary:#ffffff;--text-secondary:#9ca3af;--text-muted:#6b7280;--divider:rgba(255,255,255,0.08);--card-shadow:0 4px 12px rgba(0,0,0,0.3);--pill-bg:#374151;--search-bg:rgba(255,255,255,0.1);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html{min-height:100%;overflow-x:hidden;}
@@ -85,13 +85,13 @@ to{opacity:1;transform:translateY(0);}
 .nutrition-box.carbs .nutrition-value{color:var(--carbs-color);}
 .nutrition-box.sodium .nutrition-value{color:var(--sodium-color);}
 .nutrition-box.calcium .nutrition-value{color:var(--calcium-color);}
-.nutrition-box.sugar .nutrition-value{color:#ec4899;}
-.nutrition-box.fiber .nutrition-value{color:#10b981;}
+.nutrition-box.sugar .nutrition-value{color:var(--sugar-color);}
+.nutrition-box.fiber .nutrition-value{color:var(--fiber-color);}
 .food-footer{margin-top:16px;padding-top:12px;border-top:1px solid var(--divider);display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:12px;}
 .food-footer i{font-size:14px;}
-.fab{position:fixed;bottom:30px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--accent);color:white;border:none;box-shadow:0 6px 20px rgba(34,197,94,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;z-index:9999;transition:box-shadow 0.2s ease;transform:none !important;contain:layout;}
+.fab{position:fixed;bottom:30px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--accent);color:white;border:none;box-shadow:0 6px 20px rgba(34,197,94,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;z-index:9999;transition:box-shadow 0.2s ease;contain:layout;}
 .fab:hover{box-shadow:0 8px 25px rgba(34,197,94,0.5);}
-.fab:active{box-shadow:0 4px 15px rgba(34,197,94,0.3);}
+.fab:active{}
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:200;animation:fadeIn 0.2s ease;}
 .modal-overlay.active{display:flex;align-items:flex-end;justify-content:center;}
 @keyframes fadeIn{from{opacity:0;}
@@ -522,6 +522,16 @@ Google 雲端同步
 <input type="number" step="0.1" class="form-input" id="calciumServing" placeholder="選填">
 </div>
 </div>
+<div class="form-row">
+<div class="form-group">
+<label class="form-label">糖 (g) - 選填</label>
+<input type="number" step="0.1" class="form-input" id="sugarServing" placeholder="選填">
+</div>
+<div class="form-group">
+<label class="form-label">纖維 (g) - 選填</label>
+<input type="number" step="0.1" class="form-input" id="fiberServing" placeholder="選填">
+</div>
+</div>
 <button type="submit" class="submit-btn" id="submitBtn">儲存</button>
 </form>
 </div>
@@ -890,8 +900,8 @@ function openDatabase() {
   const N=null;
 const _F=function(d){return d.map(function(r){
 var f={id:r[0],name:r[1],nameEn:r[2],category:r[3]};
-var p=r[4];if(p)f.per100g={calories:p[0],protein:p[1],fat:p[2],carbs:p[3],sodium:p[4],calcium:p[5]};
-var s=r[5];if(s)f.perServing={weight:s[0],calories:s[1],protein:s[2],fat:s[3],carbs:s[4],sodium:s[5],calcium:s[6]};
+var p=r[4];if(p)f.per100g={calories:p[0],protein:p[1],fat:p[2],carbs:p[3],sodium:p[4],calcium:p[5],sugar:p[6]||null,fiber:p[7]||null};
+var s=r[5];if(s)f.perServing={weight:s[0],calories:s[1],protein:s[2],fat:s[3],carbs:s[4],sodium:s[5],calcium:s[6],sugar:s[7]||null,fiber:s[8]||null};
 return f;});};
 let foods = _F([
 ['1','奶皇包','Steamed egg custard bun','點心',[260,4.3,6.4,46,100,51],[46,120,2,3,22,47,24]],
@@ -1434,7 +1444,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       fat: calcFromP100(p100.fat, 1),
       carbs: calcFromP100(p100.carbs, 1),
       sodium: calcFromP100(p100.sodium, 0),
-      calcium: calcFromP100(p100.calcium, 0)
+      calcium: calcFromP100(p100.calcium, 0),
+      sugar: calcFromP100(p100.sugar, 1),
+      fiber: calcFromP100(p100.fiber, 1)
      };
     }
     const showPer100g = showPer100gSet.has(food.id);
@@ -1507,14 +1519,18 @@ document.addEventListener('DOMContentLoaded', async () => {
        <div class="nutrition-value">${data.calcium}</div>
        <div class="nutrition-label">鈣 MG</div>
       </div>
-        <div class="nutrition-box sugar">
-          <div class="nutrition-value">${n.sugar ?? 0}</div>
-          <div class="nutrition-label">糖</div>
-        </div>
-        <div class="nutrition-box fiber">
-          <div class="nutrition-value">${n.fiber ?? 0}</div>
-          <div class="nutrition-label">纖維</div>
-        </div>
+      ` : ''}
+      ${data.sugar !== null && data.sugar !== undefined ? `
+      <div class="nutrition-box sugar">
+       <div class="nutrition-value">${data.sugar}g</div>
+       <div class="nutrition-label">糖</div>
+      </div>
+      ` : ''}
+      ${data.fiber !== null && data.fiber !== undefined ? `
+      <div class="nutrition-box fiber">
+       <div class="nutrition-value">${data.fiber}g</div>
+       <div class="nutrition-label">纖維</div>
+      </div>
       ` : ''}
      </div>
      <div class="food-footer">
@@ -1800,6 +1816,8 @@ document.addEventListener('DOMContentLoaded', async () => {
  "carbs": 碳水化合物數字（g）,
  "sodium": 鈉數字（mg，如無則 null）,
  "calcium": 鈣數字（mg，如無則 null）
+ "sugar": 糖數字（g，如無則 null）,
+ "fiber": 纖維/膳食纖維數字（g，如無則 null）
 }
 注意：
 - 只回覆 JSON，不要其他文字
@@ -1918,7 +1936,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     fat: null,
     carbs: null,
     sodium: null,
-    calcium: null, sugar: 0, fiber: 0 };
+    calcium: null,
+       sugar: null,
+       fiber: null
+   };
    let cleanText = text
     .replace(/[oO](?=\d)/g, '0')
     .replace(/[lI](?=\d)/g, '1')
@@ -2129,6 +2150,8 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('carbsServing').value = displayVal(p.carbs);
    document.getElementById('sodiumServing').value = displayVal(p.sodium);
    document.getElementById('calciumServing').value = displayVal(p.calcium);
+   document.getElementById('sugarServing').value = displayVal(p.sugar);
+   document.getElementById('fiberServing').value = displayVal(p.fiber);
    if (ps && ps.weight) {
     document.getElementById('servingWeight').value = ps.weight;
    } else {
@@ -2184,7 +2207,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     fat: parseNutritionValue('fatServing'),
     carbs: parseNutritionValue('carbsServing'),
     sodium: parseNutritionValue('sodiumServing'),
-    calcium: parseNutritionValue('calciumServing')
+    calcium: parseNutritionValue('calciumServing'),
+    sugar: parseNutritionValue('sugarServing'),
+    fiber: parseNutritionValue('fiberServing')
    };
    let foodData;
    if (formInputMode === 'per100g') {
@@ -2202,7 +2227,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       fat: toPerServing(nutritionData.fat),
       carbs: toPerServing(nutritionData.carbs),
       sodium: toPerServing(nutritionData.sodium, 0),
-      calcium: toPerServing(nutritionData.calcium, 0)
+      calcium: toPerServing(nutritionData.calcium, 0),
+      sugar: toPerServing(nutritionData.sugar),
+      fiber: toPerServing(nutritionData.fiber)
      };
     }
     const newId = editId || generateNextId();
@@ -2236,7 +2263,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       fat: toPer100g(nutritionData.fat, 1),
       carbs: toPer100g(nutritionData.carbs, 1),
       sodium: toPer100g(nutritionData.sodium),
-      calcium: toPer100g(nutritionData.calcium)
+      calcium: toPer100g(nutritionData.calcium),
+       sugar: toPer100g(nutritionData.sugar),
+       fiber: toPer100g(nutritionData.fiber),
+      sugar: toPer100g(nutritionData.sugar, 1),
+      fiber: toPer100g(nutritionData.fiber, 1)
      },
      perServing: {
       weight: servingWeight,
@@ -2520,7 +2551,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     carbs: findColumnIndex(headers, ['碳水', 'carb', '醣', '糖', '碳水化合物', 'carbohydrate']),
     sodium: findColumnIndex(headers, ['鈉', 'sodium', 'na']),
     calcium: findColumnIndex(headers, ['鈣', 'calcium', 'ca']),
-    sugar: findColumnIndex(headers, ['糖', 'sugar', '糖份']),
+    sugar: findColumnIndex(headers, ['糖', 'sugar', '糖份', '總糖']),
     fiber: findColumnIndex(headers, ['纖維', 'fiber', '膳食纖維', 'dietary fiber']),
     servingWeight: findColumnIndex(headers, ['每份重量', '份量', 'serving', 'weight', '重量', '克'])
    };
@@ -2561,7 +2592,9 @@ document.addEventListener('DOMContentLoaded', async () => {
      fat: parseNum(row[colMap.fat]),
      carbs: parseNum(row[colMap.carbs]),
      sodium: parseNum(row[colMap.sodium]),
-     calcium: parseNum(row[colMap.calcium])
+     calcium: parseNum(row[colMap.calcium]),
+     sugar: colMap.sugar !== undefined && colMap.sugar >= 0 ? parseNum(row[colMap.sugar]) : null,
+     fiber: colMap.fiber !== undefined && colMap.fiber >= 0 ? parseNum(row[colMap.fiber]) : null
     };
     let food = {
      name: name,
@@ -2581,7 +2614,9 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: toPerServing(nutritionData.fat),
        carbs: toPerServing(nutritionData.carbs),
        sodium: toPerServing(nutritionData.sodium),
-       calcium: toPerServing(nutritionData.calcium)
+       calcium: toPerServing(nutritionData.calcium),
+       sugar: toPerServing(nutritionData.sugar),
+       fiber: toPerServing(nutritionData.fiber)
       };
      }
     } else {
@@ -2596,7 +2631,10 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: null,
        carbs: null,
        sodium: null,
-       calcium: null, sugar: 0, fiber: 0 };
+       calcium: null,
+       sugar: null,
+       fiber: null
+      };
      } else {
       food.perServing = {
        weight: servingWeight,
@@ -2609,7 +2647,11 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: toPer100g(nutritionData.fat),
        carbs: toPer100g(nutritionData.carbs),
        sodium: toPer100g(nutritionData.sodium),
-       calcium: toPer100g(nutritionData.calcium)
+       calcium: toPer100g(nutritionData.calcium),
+       sugar: toPer100g(nutritionData.sugar),
+       fiber: toPer100g(nutritionData.fiber),
+      sugar: toPer100g(nutritionData.sugar, 1),
+      fiber: toPer100g(nutritionData.fiber, 1)
       };
      }
     }
@@ -2691,7 +2733,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       fat: findColIdx(cols, ['脂肪', 'fat']),
       carbs: findColIdx(cols, ['碳水', 'carb', '醣', '糖']),
       sodium: findColIdx(cols, ['鈉', 'sodium']),
-      calcium: findColIdx(cols, ['鈣', 'calcium'])
+      calcium: findColIdx(cols, ['鈣', 'calcium']),
+      sugar: findColIdx(cols, ['糖', 'sugar']),
+      fiber: findColIdx(cols, ['纖維', 'fiber'])
      };
      break;
     }
@@ -2719,7 +2763,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       fat: getNum(colMap.fat),
       carbs: getNum(colMap.carbs),
       sodium: getNum(colMap.sodium),
-      calcium: getNum(colMap.calcium)
+      calcium: getNum(colMap.calcium),
+      sugar: colMap.sugar !== undefined && colMap.sugar >= 0 ? getNum(colMap.sugar) : null,
+      fiber: colMap.fiber !== undefined && colMap.fiber >= 0 ? getNum(colMap.fiber) : null
      };
      let food = { name: name, nameEn: null, per100g: null, perServing: null };
      if (aiImportInputMode === 'per100g') {
@@ -2732,7 +2778,10 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: null,
        carbs: null,
        sodium: null,
-       calcium: null, sugar: 0, fiber: 0 };
+       calcium: null,
+       sugar: null,
+       fiber: null
+      };
      }
      foods.push(food);
     } else {
@@ -2751,7 +2800,9 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: nums[2] ? parseFloat(nums[2]) : null,
        carbs: nums[3] ? parseFloat(nums[3]) : null,
        sodium: nums[4] ? parseFloat(nums[4]) : null,
-       calcium: nums[5] ? parseFloat(nums[5]) : null
+       calcium: nums[5] ? parseFloat(nums[5]) : null,
+       sugar: nums[6] ? parseFloat(nums[6]) : null,
+       fiber: nums[7] ? parseFloat(nums[7]) : null
       };
       let food = { name: foodName, nameEn: null, per100g: null, perServing: null };
       if (aiImportInputMode === 'per100g') {
@@ -2764,7 +2815,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         fat: null,
         carbs: null,
         sodium: null,
-        calcium: null, sugar: 0, fiber: 0 };
+        calcium: null,
+       sugar: null,
+       fiber: null
+       };
       }
       foods.push(food);
      }
@@ -2971,7 +3025,8 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: match[4] ? parseFloat(match[4]) : null,
        carbs: match[5] ? parseFloat(match[5]) : null,
        sodium: match[6] ? parseFloat(match[6]) : null,
-       calcium: null, sugar: 0, fiber: 0 },
+       calcium: null
+      },
       perServing: null
      };
      foods.push(food);
@@ -2999,7 +3054,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         fat: null,
         carbs: null,
         sodium: null,
-        calcium: null, sugar: 0, fiber: 0 },
+        calcium: null,
+       sugar: null,
+       fiber: null
+       },
        perServing: null
       });
      }
@@ -3595,7 +3653,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       fat: parseFloat(row['fat_serving'] || row['脂肪_每份']) || null,
       carbs: parseFloat(row['carbs_serving'] || row['碳水化合物_每份']) || null,
       sodium: parseFloat(row['sodium_serving'] || row['鈉_每份']) || null,
-      calcium: parseFloat(row['calcium_serving'] || row['鈣_每份']) || null
+      calcium: parseFloat(row['calcium_serving', 'sugar_serving', 'fiber_serving'] || row['鈣_每份']) || null
      };
     }
     if (food.name) {
@@ -3738,7 +3796,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.body.appendChild(modal);
   }
   function exportToCSV() {
-   const headers = ['id', 'name', 'nameEn', 'category', 'calories_100g', 'protein_100g', 'fat_100g', 'carbs_100g', 'sodium_100g', 'calcium_100g', 'serving_weight', 'calories_serving', 'protein_serving', 'fat_serving', 'carbs_serving', 'sodium_serving', 'calcium_serving'];
+   const headers = ['id', 'name', 'nameEn', 'category', 'calories_100g', 'protein_100g', 'fat_100g', 'carbs_100g', 'sodium_100g', 'calcium_100g', 'sugar_100g', 'fiber_100g', 'serving_weight', 'calories_serving', 'protein_serving', 'fat_serving', 'carbs_serving', 'sodium_serving', 'calcium_serving', 'sugar_serving', 'fiber_serving'];
    let csv = headers.join(',') + '\n';
    foods.forEach(food => {
     const row = [
@@ -3752,6 +3810,8 @@ document.addEventListener('DOMContentLoaded', async () => {
      food.per100g?.carbs ?? '',
      food.per100g?.sodium ?? '',
      food.per100g?.calcium ?? '',
+     food.per100g?.sugar ?? '',
+     food.per100g?.fiber ?? '',
      food.perServing?.weight ?? '',
      food.perServing?.calories ?? '',
      food.perServing?.protein ?? '',
@@ -3759,6 +3819,8 @@ document.addEventListener('DOMContentLoaded', async () => {
      food.perServing?.carbs ?? '',
      food.perServing?.sodium ?? '',
      food.perServing?.calcium ?? ''
+     food.perServing?.sugar ?? '',
+     food.perServing?.fiber ?? ''
     ];
     csv += row.join(',') + '\n';
    });
