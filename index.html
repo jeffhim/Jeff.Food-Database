@@ -1295,10 +1295,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   function adjustMainPadding() {
    const header = document.querySelector('.header');
-   const main = document.querySelector('.main-content');
-   if (header && main) {
-    main.style.paddingTop = (header.offsetHeight + 12) + 'px';
-   }
+   if (!header) return;
+   const pad = header.offsetHeight + 20;
+   document.querySelectorAll('.main-content, .page').forEach(el => {
+    el.style.paddingTop = pad + 'px';
+   });
   }
   function setupEventListeners() {
    document.getElementById('searchInput').addEventListener('input', (e) => {
