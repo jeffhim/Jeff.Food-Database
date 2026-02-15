@@ -27,7 +27,7 @@ body{font-family:'Noto Sans HK',-apple-system,BlinkMacSystemFont,sans-serif;back
 .fab{bottom:calc(30px + env(safe-area-inset-bottom));}
 .modal{padding-bottom:env(safe-area-inset-bottom);}
 }
-.header{background:var(--header-gradient);padding:10px 16px 12px;position:fixed;top:0;left:0;right:0;z-index:100;}
+.header{background:var(--header-gradient);padding:calc(10px + env(safe-area-inset-top,0px)) 16px 12px;position:fixed;top:0;left:0;right:0;z-index:100;}
 .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .header-left{display:flex;align-items:center;gap:12px;}
 .header-icon{width:38px;height:38px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;}
@@ -85,11 +85,13 @@ to{opacity:1;transform:translateY(0);}
 .nutrition-box.carbs .nutrition-value{color:var(--carbs-color);}
 .nutrition-box.sodium .nutrition-value{color:var(--sodium-color);}
 .nutrition-box.calcium .nutrition-value{color:var(--calcium-color);}
+.nutrition-box.sugar .nutrition-value{color:#ec4899;}
+.nutrition-box.fiber .nutrition-value{color:#10b981;}
 .food-footer{margin-top:16px;padding-top:12px;border-top:1px solid var(--divider);display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:12px;}
 .food-footer i{font-size:14px;}
-.fab{position:fixed;bottom:30px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--accent);color:white;border:none;box-shadow:0 6px 20px rgba(34,197,94,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;z-index:99;transition:all 0.2s ease;}
-.fab:hover{transform:scale(1.08);box-shadow:0 8px 25px rgba(34,197,94,0.5);}
-.fab:active{transform:scale(0.95);}
+.fab{position:fixed;bottom:30px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--accent);color:white;border:none;box-shadow:0 6px 20px rgba(34,197,94,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;z-index:9999;transition:box-shadow 0.2s ease;transform:none !important;contain:layout;}
+.fab:hover{box-shadow:0 8px 25px rgba(34,197,94,0.5);}
+.fab:active{box-shadow:0 4px 15px rgba(34,197,94,0.3);}
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:200;animation:fadeIn 0.2s ease;}
 .modal-overlay.active{display:flex;align-items:flex-end;justify-content:center;}
 @keyframes fadeIn{from{opacity:0;}
@@ -1505,6 +1507,14 @@ document.addEventListener('DOMContentLoaded', async () => {
        <div class="nutrition-value">${data.calcium}</div>
        <div class="nutrition-label">鈣 MG</div>
       </div>
+        <div class="nutrition-box sugar">
+          <div class="nutrition-value">${n.sugar ?? 0}</div>
+          <div class="nutrition-label">糖</div>
+        </div>
+        <div class="nutrition-box fiber">
+          <div class="nutrition-value">${n.fiber ?? 0}</div>
+          <div class="nutrition-label">纖維</div>
+        </div>
       ` : ''}
      </div>
      <div class="food-footer">
@@ -1908,8 +1918,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     fat: null,
     carbs: null,
     sodium: null,
-    calcium: null
-   };
+    calcium: null, sugar: 0, fiber: 0 };
    let cleanText = text
     .replace(/[oO](?=\d)/g, '0')
     .replace(/[lI](?=\d)/g, '1')
@@ -2511,6 +2520,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     carbs: findColumnIndex(headers, ['碳水', 'carb', '醣', '糖', '碳水化合物', 'carbohydrate']),
     sodium: findColumnIndex(headers, ['鈉', 'sodium', 'na']),
     calcium: findColumnIndex(headers, ['鈣', 'calcium', 'ca']),
+    sugar: findColumnIndex(headers, ['糖', 'sugar', '糖份']),
+    fiber: findColumnIndex(headers, ['纖維', 'fiber', '膳食纖維', 'dietary fiber']),
     servingWeight: findColumnIndex(headers, ['每份重量', '份量', 'serving', 'weight', '重量', '克'])
    };
    if (colMap.name === -1) {
@@ -2585,8 +2596,7 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: null,
        carbs: null,
        sodium: null,
-       calcium: null
-      };
+       calcium: null, sugar: 0, fiber: 0 };
      } else {
       food.perServing = {
        weight: servingWeight,
@@ -2722,8 +2732,7 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: null,
        carbs: null,
        sodium: null,
-       calcium: null
-      };
+       calcium: null, sugar: 0, fiber: 0 };
      }
      foods.push(food);
     } else {
@@ -2755,8 +2764,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         fat: null,
         carbs: null,
         sodium: null,
-        calcium: null
-       };
+        calcium: null, sugar: 0, fiber: 0 };
       }
       foods.push(food);
      }
@@ -2963,8 +2971,7 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: match[4] ? parseFloat(match[4]) : null,
        carbs: match[5] ? parseFloat(match[5]) : null,
        sodium: match[6] ? parseFloat(match[6]) : null,
-       calcium: null
-      },
+       calcium: null, sugar: 0, fiber: 0 },
       perServing: null
      };
      foods.push(food);
@@ -2992,8 +2999,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         fat: null,
         carbs: null,
         sodium: null,
-        calcium: null
-       },
+        calcium: null, sugar: 0, fiber: 0 },
        perServing: null
       });
      }
@@ -3120,8 +3126,8 @@ document.addEventListener('DOMContentLoaded', async () => {
  {
   "name": "中文名",
   "nameEn": "English Name",
-  "per100g": { "calories": 數字, "protein": 數字, "fat": 數字, "carbs": 數字, "sodium": 數字, "calcium": 數字 },
-  "perServing": { "weight": 數字, "calories": 數字, "protein": 數字, "fat": 數字, "carbs": 數字, "sodium": 數字, "calcium": 數字 }
+  "per100g": { "calories": 數字, "protein": 數字, "fat": 數字, "carbs": 數字, "sodium": 數字, "calcium": 數字, "sugar": 數字, "fiber": 數字 },
+  "perServing": { "weight": 數字, "calories": 數字, "protein": 數字, "fat": 數字, "carbs": 數字, "sodium": 數字, "calcium": 數字, "sugar": 數字, "fiber": 數字 }
  }
 ]
 重要：如果表格中沒有提供某項營養數據，該項設為null。如果沒有每份數據，perServing整個設為null。數值請四捨五入到合理精度。`;
