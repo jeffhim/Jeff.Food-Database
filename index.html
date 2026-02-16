@@ -1385,7 +1385,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     filteredFoods = filteredFoods.filter(f =>
      f.name.toLowerCase().includes(term) ||
      (f.nameEn && f.nameEn.toLowerCase().includes(term)) ||
-     f.category.toLowerCase().includes(term)
+     f.category.toLowerCase().includes(term) ||
+     (f.brand && f.brand.toLowerCase().includes(term))
     );
    }
    if (filteredFoods.length === 0) {
