@@ -1645,8 +1645,8 @@ document.addEventListener('DOMContentLoaded', async () => {
    } else {
     per100gBtn.classList.remove('active');
     perServingBtn.classList.add('active');
-    servingWeightLabel.innerHTML = '每份重量 (g) <span style="color: var(--accent);">*必填</span>';
-    servingWeightInput.placeholder = '例如：31';
+    servingWeightLabel.innerHTML = '每份重量 (g) <span style="color: var(--text-secondary);">- 選填（填寫後自動計算每100g）</span>';
+    servingWeightInput.placeholder = '例如：31（選填）';
     nutritionTitle.textContent = '營養資料 (每食用份量)';
    }
   }
