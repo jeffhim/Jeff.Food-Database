@@ -1301,7 +1301,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function adjustMainPadding() {
    const header = document.querySelector('.header');
    if (!header) return;
-   const pad = header.offsetHeight + 6;
+   const pad = header.offsetHeight;
    document.querySelectorAll('.main-content, .page').forEach(el => {
     el.style.paddingTop = pad + 'px';
    });
@@ -1423,7 +1423,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      };
     }
     const showPer100g = showPer100gSet.has(food.id);
-    const hasPerServing = filledPs && filledPs.weight && (filledPs.calories !== null && filledPs.calories !== undefined);
+    const hasPerServing = filledPs && (filledPs.calories !== null && filledPs.calories !== undefined);
     const hasPer100g = p100 && (p100.calories !== null && p100.calories !== undefined);
     let data, modeText, modeClass;
     if (hasPerServing && hasPer100g) {
@@ -2161,11 +2161,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderCategories();
     renderCategoryPills();
    }
-   if (formInputMode === 'perServing' && !servingWeight) {
-    showToast('請輸入每份重量');
-    document.getElementById('servingWeight').focus();
-    return;
-   }
    const selectedSource = document.getElementById('foodSource').value;
    const selectedBrand = document.getElementById('foodBrand').value.trim() || null;
    const parseNutritionValue = (id) => {
@@ -2217,20 +2212,14 @@ document.addEventListener('DOMContentLoaded', async () => {
      perServing: perServingData
     };
    } else {
-    const toPer100g = (val, decimals = 0) => {
-     if (val === null) return null;
-     const result = val / servingWeight * 100;
-     return decimals > 0 ? Math.round(result * Math.pow(10, decimals)) / Math.pow(10, decimals) : Math.round(result);
-    };
-    const newId = editId || generateNextId();
-    foodData = {
-     id: newId,
-     name: document.getElementById('foodName').value.trim(),
-     nameEn: document.getElementById('foodNameEn').value.trim() || null,
-     brand: selectedBrand,
-     category: selectedCategory,
-     source: selectedSource,
-     per100g: {
+    let per100gData = null;
+    if (servingWeight && servingWeight > 0) {
+     const toPer100g = (val, decimals = 0) => {
+      if (val === null) return null;
+      const result = val / servingWeight * 100;
+      return decimals > 0 ? Math.round(result * Math.pow(10, decimals)) / Math.pow(10, decimals) : Math.round(result);
+     };
+     per100gData = {
       calories: toPer100g(nutritionData.calories),
       protein: toPer100g(nutritionData.protein, 1),
       fat: toPer100g(nutritionData.fat, 1),
@@ -2239,7 +2228,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       calcium: toPer100g(nutritionData.calcium),
       sugar: toPer100g(nutritionData.sugar, 1),
       fiber: toPer100g(nutritionData.fiber, 1)
-     },
+     };
+    }
+    const newId = editId || generateNextId();
+    foodData = {
+     id: newId,
+     name: document.getElementById('foodName').value.trim(),
+     nameEn: document.getElementById('foodNameEn').value.trim() || null,
+     brand: selectedBrand,
+     category: selectedCategory,
+     source: selectedSource,
+     per100g: per100gData,
      perServing: {
       weight: servingWeight,
       ...nutritionData
