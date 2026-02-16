@@ -693,6 +693,8 @@ Google 雲端同步
 <label class="checked"><input type="checkbox" value="carbs" checked onchange="toggleNutPick(this)">碳水</label>
 <label><input type="checkbox" value="sodium" onchange="toggleNutPick(this)">鈉</label>
 <label><input type="checkbox" value="calcium" onchange="toggleNutPick(this)">鈣</label>
+<label><input type="checkbox" value="sugar" onchange="toggleNutPick(this)">糖</label>
+<label><input type="checkbox" value="fiber" onchange="toggleNutPick(this)">纖維</label>
 </div>
 </div>
 <div class="form-group">
@@ -4265,7 +4267,9 @@ document.addEventListener('DOMContentLoaded', async () => {
    fat: {label:'脂肪', unit:'g', color:'var(--fat-color)'},
    carbs: {label:'碳水', unit:'g', color:'var(--carbs-color)'},
    sodium: {label:'鈉', unit:'mg', color:'var(--sodium-color)'},
-   calcium: {label:'鈣', unit:'mg', color:'var(--calcium-color)'}
+   calcium: {label:'鈣', unit:'mg', color:'var(--calcium-color)'},
+   sugar: {label:'糖', unit:'g', color:'var(--sugar-color)'},
+   fiber: {label:'纖維', unit:'g', color:'var(--fiber-color)'}
   };
 
   async function loadDocs() {
