@@ -804,7 +804,7 @@ function openDatabase() {
     const loadedFoods = await _P(foodStore.getAll());
     const loadedCats = await _P(catStore.getAll());
     const loadedEmojis = await _P(settingsStore.get('categoryEmojis')).catch(()=>null);
-    if (loadedFoods && loadedFoods.length >= foods.length) {
+    if (loadedFoods && loadedFoods.length > 0) {
      foods = loadedFoods.map(f => {
       if (f.per100g && f.per100g.sugar === undefined) { f.per100g.sugar = null; f.per100g.fiber = null; }
       if (f.perServing && f.perServing.sugar === undefined) { f.perServing.sugar = null; f.perServing.fiber = null; }
@@ -2028,6 +2028,28 @@ document.addEventListener('DOMContentLoaded', async () => {
      break;
     }
    }
+   const sugarPatterns = [
+    /(?:總糖|糖份|糖|sugars?|total\s*sugar)[:\s\/|]*(\d+(?:[.,]\d+)?)\s*(?:g|克|公克)/i,
+    /(?:糖|sugars?)[:\s|\/]*(\d+(?:[.,]\d+)?)/i
+   ];
+   for (const pattern of sugarPatterns) {
+    const match = cleanText.match(pattern);
+    if (match) {
+     data.sugar = parseFloat(match[1].replace(',', '.'));
+     break;
+    }
+   }
+   const fiberPatterns = [
+    /(?:膳食纖維|纖維|dietary\s*fib(?:er|re)|fib(?:er|re))[:\s\/|]*(\d+(?:[.,]\d+)?)\s*(?:g|克|公克)/i,
+    /(?:纖維|fib(?:er|re))[:\s|\/]*(\d+(?:[.,]\d+)?)/i
+   ];
+   for (const pattern of fiberPatterns) {
+    const match = cleanText.match(pattern);
+    if (match) {
+     data.fiber = parseFloat(match[1].replace(',', '.'));
+     break;
+    }
+   }
    if (data.calories === null || data.protein === null || data.fat === null || data.carbs === null) {
     const lines = cleanText.split(/[\n\r]+/);
     for (let i = 0; i < lines.length; i++) {
@@ -2063,6 +2085,14 @@ document.addEventListener('DOMContentLoaded', async () => {
      if (data.calcium === null && /鈣|calcium/i.test(line)) {
       const numMatch = combined.match(/(\d+(?:[.,]\d+)?)/);
       if (numMatch) data.calcium = parseFloat(numMatch[1].replace(',', '.'));
+     }
+     if (data.sugar === null && /糖|sugar/i.test(line) && !/碳水|carb/i.test(line)) {
+      const numMatch = combined.match(/(\d+(?:[.,]\d+)?)/);
+      if (numMatch) data.sugar = parseFloat(numMatch[1].replace(',', '.'));
+     }
+     if (data.fiber === null && /纖維|fiber|fibre/i.test(line)) {
+      const numMatch = combined.match(/(\d+(?:[.,]\d+)?)/);
+      if (numMatch) data.fiber = parseFloat(numMatch[1].replace(',', '.'));
      }
     }
    }
@@ -2103,6 +2133,12 @@ document.addEventListener('DOMContentLoaded', async () => {
    }
    if (data.calcium !== null && data.calcium !== undefined) {
     document.getElementById('calciumServing').value = data.calcium;
+   }
+   if (data.sugar !== null && data.sugar !== undefined) {
+    document.getElementById('sugarServing').value = data.sugar;
+   }
+   if (data.fiber !== null && data.fiber !== undefined) {
+    document.getElementById('fiberServing').value = data.fiber;
    }
   }
   function editFood(id) {
@@ -2289,6 +2325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       foods: foods,
       categories: categories,
       categoryEmojis: categoryEmojis,
+      savedDocs: savedDocs,
       lastUpdated: new Date().toISOString()
      })
     });
@@ -2996,7 +3033,9 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: match[4] ? parseFloat(match[4]) : null,
        carbs: match[5] ? parseFloat(match[5]) : null,
        sodium: match[6] ? parseFloat(match[6]) : null,
-       calcium: null
+       calcium: null,
+       sugar: null,
+       fiber: null
       },
       perServing: null
      };
@@ -3109,10 +3148,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const p = item.per100g || {};
     const s = item.perServing;
     const fv = (val, unit = '') => val !== null && val !== undefined ? val + unit : '--';
-    const per100gStr = `${fv(p.calories, 'kcal')} | 蛋白質${fv(p.protein, 'g')} | 脂肪${fv(p.fat, 'g')} | 碳水${fv(p.carbs, 'g')} | 鈉${fv(p.sodium, 'mg')} | 鈣${fv(p.calcium, 'mg')}`;
+    const sugarFiberStr100 = (p.sugar !== null && p.sugar !== undefined ? ` | 糖${fv(p.sugar, 'g')}` : '') + (p.fiber !== null && p.fiber !== undefined ? ` | 纖維${fv(p.fiber, 'g')}` : '');
+    const per100gStr = `${fv(p.calories, 'kcal')} | 蛋白質${fv(p.protein, 'g')} | 脂肪${fv(p.fat, 'g')} | 碳水${fv(p.carbs, 'g')} | 鈉${fv(p.sodium, 'mg')} | 鈣${fv(p.calcium, 'mg')}${sugarFiberStr100}`;
     let perServingStr = '';
     if (s) {
-     perServingStr = `${fv(s.calories, 'kcal')} | 蛋白質${fv(s.protein, 'g')} | 脂肪${fv(s.fat, 'g')} | 碳水${fv(s.carbs, 'g')} | 鈉${fv(s.sodium, 'mg')} | 鈣${fv(s.calcium, 'mg')}`;
+     const sugarFiberStrS = (s.sugar !== null && s.sugar !== undefined ? ` | 糖${fv(s.sugar, 'g')}` : '') + (s.fiber !== null && s.fiber !== undefined ? ` | 纖維${fv(s.fiber, 'g')}` : '');
+     perServingStr = `${fv(s.calories, 'kcal')} | 蛋白質${fv(s.protein, 'g')} | 脂肪${fv(s.fat, 'g')} | 碳水${fv(s.carbs, 'g')} | 鈉${fv(s.sodium, 'mg')} | 鈣${fv(s.calcium, 'mg')}${sugarFiberStrS}`;
     }
     return `
     <div style="background: var(--bg-secondary); padding: 12px; border-radius: 10px; margin-bottom: 8px;">
@@ -3276,7 +3317,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         fat: numbers[2] < 100 ? numbers[2] : null,
         carbs: numbers[3] < 200 ? numbers[3] : null,
         sodium: numbers[4] || null,
-        calcium: numbers[5] || null
+        calcium: numbers[5] || null,
+        sugar: numbers[6] || null,
+        fiber: numbers[7] || null
        },
        perServing: null
       };
@@ -3296,7 +3339,9 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: singleFood.fat,
        carbs: singleFood.carbs,
        sodium: singleFood.sodium,
-       calcium: singleFood.calcium
+       calcium: singleFood.calcium,
+       sugar: singleFood.sugar,
+       fiber: singleFood.fiber
       },
       perServing: singleFood.mode === 'perServing' && singleFood.servingWeight ? {
        weight: singleFood.servingWeight,
@@ -3305,7 +3350,9 @@ document.addEventListener('DOMContentLoaded', async () => {
        fat: singleFood.fat,
        carbs: singleFood.carbs,
        sodium: singleFood.sodium,
-       calcium: singleFood.calcium
+       calcium: singleFood.calcium,
+       sugar: singleFood.sugar,
+       fiber: singleFood.fiber
       } : null
      });
     }
@@ -3348,7 +3395,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       fat: p.fat ?? null,
       carbs: p.carbs ?? null,
       sodium: p.sodium ?? null,
-      calcium: p.calcium ?? null
+      calcium: p.calcium ?? null,
+      sugar: p.sugar ?? null,
+      fiber: p.fiber ?? null
      },
      perServing: s ? {
       weight: s.weight ?? null,
@@ -3357,7 +3406,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       fat: s.fat ?? null,
       carbs: s.carbs ?? null,
       sodium: s.sodium ?? null,
-      calcium: s.calcium ?? null
+      calcium: s.calcium ?? null,
+      sugar: s.sugar ?? null,
+      fiber: s.fiber ?? null
      } : null
     };
     foods.push(foodData);
@@ -3612,7 +3663,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       fat: parseFloat(row['fat_100g'] || row['脂肪_100g']) || null,
       carbs: parseFloat(row['carbs_100g'] || row['碳水化合物_100g']) || null,
       sodium: parseFloat(row['sodium_100g'] || row['鈉_100g']) || null,
-      calcium: parseFloat(row['calcium_100g'] || row['鈣_100g']) || null
+      calcium: parseFloat(row['calcium_100g'] || row['鈣_100g']) || null,
+      sugar: parseFloat(row['sugar_100g'] || row['糖_100g']) || null,
+      fiber: parseFloat(row['fiber_100g'] || row['纖維_100g']) || null
      }
     };
     const servingWeight = parseFloat(row['serving_weight'] || row['每份重量']);
@@ -3624,7 +3677,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       fat: parseFloat(row['fat_serving'] || row['脂肪_每份']) || null,
       carbs: parseFloat(row['carbs_serving'] || row['碳水化合物_每份']) || null,
       sodium: parseFloat(row['sodium_serving'] || row['鈉_每份']) || null,
-      calcium: parseFloat(row['calcium_serving', 'sugar_serving', 'fiber_serving'] || row['鈣_每份']) || null
+      calcium: parseFloat(row['calcium_serving'] || row['鈣_每份']) || null,
+      sugar: parseFloat(row['sugar_serving'] || row['糖_每份']) || null,
+      fiber: parseFloat(row['fiber_serving'] || row['纖維_每份']) || null
      };
     }
     if (food.name) {
@@ -4061,6 +4116,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       saveDocs();
      }
     } else if (cloudFoodCount > 0) {
+     // 合併：保留本地已有的 sugar/fiber/brand/source
+     var localMap = {};
+     foods.forEach(function(f) { localMap[f.id] = f; });
+     data.foods.forEach(function(cf) {
+      var lf = localMap[cf.id];
+      if (lf) {
+       if (cf.per100g && lf.per100g) {
+        if ((cf.per100g.sugar === null || cf.per100g.sugar === undefined) && lf.per100g.sugar != null) cf.per100g.sugar = lf.per100g.sugar;
+        if ((cf.per100g.fiber === null || cf.per100g.fiber === undefined) && lf.per100g.fiber != null) cf.per100g.fiber = lf.per100g.fiber;
+       }
+       if (cf.perServing && lf.perServing) {
+        if ((cf.perServing.sugar === null || cf.perServing.sugar === undefined) && lf.perServing.sugar != null) cf.perServing.sugar = lf.perServing.sugar;
+        if ((cf.perServing.fiber === null || cf.perServing.fiber === undefined) && lf.perServing.fiber != null) cf.perServing.fiber = lf.perServing.fiber;
+       }
+       if (!cf.brand && lf.brand) cf.brand = lf.brand;
+       if (!cf.source && lf.source) cf.source = lf.source;
+      }
+     });
      foods = data.foods;
      if (data.categories && Array.isArray(data.categories)) {
       categories = data.categories;
@@ -4098,8 +4171,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   async function autoUploadIfEnabled() {
    if (!autoSyncEnabled || _syncLock) return;
-   if (foods.length < 10) {
-    console.log('Auto-upload skipped: only ' + foods.length + ' items, too few to upload');
+   if (foods.length === 0) {
+    console.log('Auto-upload skipped: no items');
     return;
    }
    const url = await loadAppsScriptUrl();
@@ -4219,7 +4292,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (cloudCount < localCount * 0.5) {
          console.log('Auto-sync skipped: cloud has ' + cloudCount + ' items vs local ' + localCount + ', keeping local data');
         } else {
-         foods = result.data.foods;
+         // 合併雲端資料：保留本地已有的 sugar/fiber 數據
+         var cloudFoods = result.data.foods;
+         var localFoodsMap = {};
+         foods.forEach(function(f) { localFoodsMap[f.id] = f; });
+         cloudFoods.forEach(function(cf) {
+          var lf = localFoodsMap[cf.id];
+          if (lf) {
+           // 如果雲端缺少 sugar/fiber 但本地有，保留本地值
+           if (cf.per100g && lf.per100g) {
+            if ((cf.per100g.sugar === null || cf.per100g.sugar === undefined) && lf.per100g.sugar !== null && lf.per100g.sugar !== undefined) cf.per100g.sugar = lf.per100g.sugar;
+            if ((cf.per100g.fiber === null || cf.per100g.fiber === undefined) && lf.per100g.fiber !== null && lf.per100g.fiber !== undefined) cf.per100g.fiber = lf.per100g.fiber;
+           }
+           if (cf.perServing && lf.perServing) {
+            if ((cf.perServing.sugar === null || cf.perServing.sugar === undefined) && lf.perServing.sugar !== null && lf.perServing.sugar !== undefined) cf.perServing.sugar = lf.perServing.sugar;
+            if ((cf.perServing.fiber === null || cf.perServing.fiber === undefined) && lf.perServing.fiber !== null && lf.perServing.fiber !== undefined) cf.perServing.fiber = lf.perServing.fiber;
+           }
+           // 保留本地有但雲端缺的欄位
+           if (!cf.brand && lf.brand) cf.brand = lf.brand;
+           if (!cf.source && lf.source) cf.source = lf.source;
+          }
+         });
+         foods = cloudFoods;
          if (result.data.categories) categories = result.data.categories;
          if (result.data.categoryEmojis) {
           Object.keys(categoryEmojis).forEach(k => delete categoryEmojis[k]);
