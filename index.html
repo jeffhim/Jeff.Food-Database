@@ -870,7 +870,7 @@ function openDatabase() {
   let cloudSyncUrl = '';
   const N=null;
 const _F=function(d){return d.map(function(r){
-var f={id:r[0],name:r[1],nameEn:r[2],category:r[3]};
+var f={id:r[0],name:r[1],nameEn:r[2],category:r[3],source:r[6]||null,brand:r[7]||null};
 var p=r[4];if(p)f.per100g={calories:p[0],protein:p[1],fat:p[2],carbs:p[3],sodium:p[4],calcium:p[5],sugar:p[6]||null,fiber:p[7]||null};
 var s=r[5];if(s)f.perServing={weight:s[0],calories:s[1],protein:s[2],fat:s[3],carbs:s[4],sodium:s[5],calcium:s[6],sugar:s[7]||null,fiber:s[8]||null};
 return f;});};
