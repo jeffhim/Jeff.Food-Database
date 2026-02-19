@@ -1304,7 +1304,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function adjustMainPadding() {
    const header = document.querySelector('.header');
    if (!header) return;
-   const pad = header.offsetHeight;
+   const pad = header.offsetHeight + 12;
    const main = document.querySelector('.main-content');
    if (main) main.style.paddingTop = pad + 'px';
   }
