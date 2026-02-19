@@ -721,6 +721,7 @@ Google 雲端同步
 </div>
 <div class="modal-body">
 <div id="viewDocMeta" style="margin-bottom:12px;"></div>
+<div id="viewDocModeToggle" style="margin-bottom:12px;"></div>
 <div id="viewDocTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
 <div style="display:flex;gap:10px;margin-top:20px;">
 <button type="button" class="submit-btn" onclick="editCurrentDoc()" style="flex:1;background:#3b82f6;"><i class="fas fa-edit"></i> 編輯</button>
@@ -1304,9 +1305,8 @@ document.addEventListener('DOMContentLoaded', async () => {
    const header = document.querySelector('.header');
    if (!header) return;
    const pad = header.offsetHeight;
-   document.querySelectorAll('.main-content, .page').forEach(el => {
-    el.style.paddingTop = pad + 'px';
-   });
+   const main = document.querySelector('.main-content');
+   if (main) main.style.paddingTop = pad + 'px';
   }
   function setupEventListeners() {
    document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -4522,24 +4522,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /* View Document */
+  var viewDocCurrentMode = 'per100g';
+
   function viewDocument(docId) {
    var doc = savedDocs.find(function(d){return d.id===docId;});
    if (!doc) return;
    viewingDocId = docId;
+   viewDocCurrentMode = doc.mode || 'per100g';
    document.getElementById('viewDocTitle').innerHTML = '<i class="fas fa-file-alt" style="color:#3b82f6;"></i> ' + _esc(doc.name);
    var dateStr = doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('zh-HK',{year:'numeric',month:'long',day:'numeric'}) : '';
-   var modeStr = doc.mode === 'per100g' ? '每 100g' : '每食用份量';
    document.getElementById('viewDocMeta').innerHTML =
     '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--text-secondary);font-size:13px;">' +
     (dateStr ? '<span><i class="fas fa-calendar"></i> ' + dateStr + '</span>' : '') +
-    '<span><i class="fas fa-balance-scale"></i> ' + modeStr + '</span>' +
     '<span><i class="fas fa-utensils"></i> ' + doc.foodIds.length + ' 項食物</span>' +
     '</div>' +
     (doc.notes ? '<div style="margin-top:8px;font-size:13px;color:var(--text-muted);"><i class="fas fa-sticky-note"></i> ' + _esc(doc.notes) + '</div>' : '');
 
-   // Build comparison table
+   // Render mode toggle
+   document.getElementById('viewDocModeToggle').innerHTML =
+    '<div class="input-mode-toggle">' +
+    '<button type="button" class="input-mode-btn' + (viewDocCurrentMode==='per100g'?' active':'') + '" onclick="switchViewDocMode(\'per100g\')">每 100g</button>' +
+    '<button type="button" class="input-mode-btn' + (viewDocCurrentMode==='perServing'?' active':'') + '" onclick="switchViewDocMode(\'perServing\')">每食用份量</button>' +
+    '</div>';
+
+   renderViewDocTable();
+   document.getElementById('viewDocModal').classList.add('active');
+  }
+
+  function switchViewDocMode(mode) {
+   viewDocCurrentMode = mode;
+   var btns = document.querySelectorAll('#viewDocModeToggle .input-mode-btn');
+   btns.forEach(function(b){ b.classList.remove('active'); });
+   if (mode === 'per100g') btns[0].classList.add('active');
+   else btns[1].classList.add('active');
+   renderViewDocTable();
+  }
+
+  function renderViewDocTable() {
+   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
+   if (!doc) return;
+   var mode = viewDocCurrentMode;
    var nuts = doc.nutrients || [];
    var foodList = doc.foodIds.map(function(id){ return foods.find(function(x){return x.id===id;}); }).filter(Boolean);
+   var modeLabel = mode === 'per100g' ? '每 100g' : '每食用份量';
    var html = '<table class="doc-view-table"><thead><tr><th>食物</th>';
    nuts.forEach(function(k){
     var m = NUT_META[k];
@@ -4547,10 +4572,13 @@ document.addEventListener('DOMContentLoaded', async () => {
    });
    html += '</tr></thead><tbody>';
    var totals = {};
-   nuts.forEach(function(k){ totals[k] = 0; });
+   var counts = {};
+   nuts.forEach(function(k){ totals[k] = 0; counts[k] = 0; });
    foodList.forEach(function(f){
-    var data = doc.mode === 'per100g' ? (f.per100g||{}) : null;
-    if (doc.mode === 'perServing') {
+    var data = null;
+    if (mode === 'per100g') {
+     data = f.per100g || {};
+    } else {
      var ps = f.perServing;
      var p100 = f.per100g;
      if (ps && ps.weight && p100) {
@@ -4558,21 +4586,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       var w = ps.weight;
       nuts.forEach(function(k){
        if (p100[k] !== null && p100[k] !== undefined) { data[k] = Math.round(p100[k]*w/100*10)/10; }
+       else if (ps[k] !== null && ps[k] !== undefined) { data[k] = ps[k]; }
        else { data[k] = null; }
       });
       data._weight = w;
      } else if (ps) { data = ps; }
-     else { data = p100 || {}; }
+     else { data = {}; }
     }
     if (!data) data = {};
     var emoji = categoryEmojis[f.category] || '';
     html += '<tr><td>' + (emoji?emoji+' ':'') + _esc(f.name);
-    if (doc.mode==='perServing' && data._weight) html += '<br><span style="font-size:10px;color:var(--text-muted);">' + data._weight + 'g</span>';
+    if (mode==='perServing' && (data._weight || (f.perServing && f.perServing.weight))) {
+     var wt = data._weight || f.perServing.weight;
+     html += '<br><span style="font-size:10px;color:var(--text-muted);">' + wt + 'g</span>';
+    }
     html += '</td>';
     nuts.forEach(function(k){
      var v = data[k];
-     var display = (v !== null && v !== undefined) ? (k==='calories'||k==='sodium'||k==='calcium'? Math.round(v) : Math.round(v*10)/10) : '--';
-     if (typeof display === 'number') totals[k] += display;
+     var display = '';
+     if (v !== null && v !== undefined) {
+      display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
+      totals[k] += display;
+      counts[k]++;
+     }
      var m = NUT_META[k];
      html += '<td style="color:'+(m?m.color:'inherit')+';font-weight:600;">'+display+'</td>';
     });
@@ -4582,22 +4618,29 @@ document.addEventListener('DOMContentLoaded', async () => {
    if (foodList.length > 1) {
     html += '<tr class="doc-total-row"><td>合計</td>';
     nuts.forEach(function(k){
-     var v = totals[k];
-     var display = k==='calories'||k==='sodium'||k==='calcium' ? Math.round(v) : Math.round(v*10)/10;
-     html += '<td>'+display+'</td>';
+     if (counts[k] > 0) {
+      var v = totals[k];
+      var display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
+      html += '<td>'+display+'</td>';
+     } else {
+      html += '<td></td>';
+     }
     });
     html += '</tr>';
     html += '<tr class="doc-total-row" style="opacity:0.7;"><td>平均</td>';
     nuts.forEach(function(k){
-     var v = totals[k] / foodList.length;
-     var display = k==='calories'||k==='sodium'||k==='calcium' ? Math.round(v) : Math.round(v*10)/10;
-     html += '<td>'+display+'</td>';
+     if (counts[k] > 0) {
+      var v = totals[k] / counts[k];
+      var display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
+      html += '<td>'+display+'</td>';
+     } else {
+      html += '<td></td>';
+     }
     });
     html += '</tr>';
    }
    html += '</tbody></table>';
    document.getElementById('viewDocTableWrap').innerHTML = html;
-   document.getElementById('viewDocModal').classList.add('active');
   }
   function closeViewDocModal() {
    document.getElementById('viewDocModal').classList.remove('active');
