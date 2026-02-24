@@ -1413,16 +1413,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       const result = p100Val * w / 100;
       return decimals === 0 ? Math.round(result) : Math.round(result * Math.pow(10, decimals)) / Math.pow(10, decimals);
      };
+     const useOrig = (origVal, p100Val, decimals) => (origVal !== null && origVal !== undefined) ? origVal : calcFromP100(p100Val, decimals);
      filledPs = {
       weight: w,
-      calories: calcFromP100(p100.calories, 0),
-      protein: calcFromP100(p100.protein, 1),
-      fat: calcFromP100(p100.fat, 1),
-      carbs: calcFromP100(p100.carbs, 1),
-      sodium: calcFromP100(p100.sodium, 0),
-      calcium: calcFromP100(p100.calcium, 0),
-      sugar: calcFromP100(p100.sugar, 1),
-      fiber: calcFromP100(p100.fiber, 1)
+      calories: useOrig(ps.calories, p100.calories, 0),
+      protein: useOrig(ps.protein, p100.protein, 1),
+      fat: useOrig(ps.fat, p100.fat, 1),
+      carbs: useOrig(ps.carbs, p100.carbs, 1),
+      sodium: useOrig(ps.sodium, p100.sodium, 0),
+      calcium: useOrig(ps.calcium, p100.calcium, 0),
+      sugar: useOrig(ps.sugar, p100.sugar, 1),
+      fiber: useOrig(ps.fiber, p100.fiber, 1)
      };
     }
     const showPer100g = showPer100gSet.has(food.id);
@@ -4585,8 +4586,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       data = {};
       var w = ps.weight;
       nuts.forEach(function(k){
-       if (p100[k] !== null && p100[k] !== undefined) { data[k] = Math.round(p100[k]*w/100*10)/10; }
-       else if (ps[k] !== null && ps[k] !== undefined) { data[k] = ps[k]; }
+       if (ps[k] !== null && ps[k] !== undefined) { data[k] = ps[k]; }
+       else if (p100[k] !== null && p100[k] !== undefined) { data[k] = Math.round(p100[k]*w/100*10)/10; }
        else { data[k] = null; }
       });
       data._weight = w;
