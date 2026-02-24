@@ -1304,10 +1304,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   function adjustMainPadding() {
    const header = document.querySelector('.header');
    if (!header) return;
-   const pad = header.offsetHeight + 12;
+   const pad = header.offsetHeight + 16;
    const main = document.querySelector('.main-content');
    if (main) main.style.paddingTop = pad + 'px';
   }
+  window.addEventListener('load', adjustMainPadding);
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(adjustMainPadding); }
   function setupEventListeners() {
    document.getElementById('searchInput').addEventListener('input', (e) => {
     renderFoodList(e.target.value);
