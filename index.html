@@ -514,12 +514,15 @@
     </div>
 
     <!-- Fullscreen chart overlay -->
-    <div id="chart-fullscreen" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(0,0,0,0.92);overflow:auto;-webkit-overflow-scrolling:touch;" onclick="closeChartFullscreen()">
-      <div style="position:sticky;top:0;z-index:1;display:flex;justify-content:flex-end;padding:12px 16px;">
-        <button style="background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:18px;width:40px;height:40px;border-radius:50%;cursor:pointer;" onclick="closeChartFullscreen()"><i class="fas fa-times"></i></button>
+    <div id="chart-fullscreen" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(0,0,0,0.92);overflow:hidden;touch-action:none;">
+      <div style="position:absolute;top:0;right:0;z-index:2;padding:12px 16px;">
+        <button style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:18px;width:44px;height:44px;border-radius:50%;cursor:pointer;" onclick="closeChartFullscreen()"><i class="fas fa-times"></i></button>
       </div>
-      <div style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 64px);padding:8px;">
-        <canvas id="growth-chart-canvas-full" style="max-width:100%;"></canvas>
+      <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;display:flex;justify-content:center;gap:12px;padding:14px;">
+        <button style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:14px;padding:8px 16px;border-radius:20px;cursor:pointer;" onclick="chartZoomReset()"><i class="fas fa-arrows-to-dot" style="margin-right:4px;"></i>Reset</button>
+      </div>
+      <div id="chart-zoom-container" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        <canvas id="growth-chart-canvas-full" style="transform-origin:0 0;"></canvas>
       </div>
     </div>
 
@@ -2930,17 +2933,105 @@
       }
     }
 
+    // --- Fullscreen chart with pinch-zoom ---
+    var chartZoom = { scale: 1, tx: 0, ty: 0, pinching: false, lastDist: 0, lastMidX: 0, lastMidY: 0, panning: false, panStartX: 0, panStartY: 0, panTxStart: 0, panTyStart: 0 };
+
     function openChartFullscreen() {
       var overlay = document.getElementById('chart-fullscreen');
       overlay.style.display = 'block';
       document.body.style.overflow = 'hidden';
+      chartZoomReset();
       var fullCanvas = document.getElementById('growth-chart-canvas-full');
       drawGrowthChart(fullCanvas);
+      initChartZoomListeners();
     }
 
     function closeChartFullscreen() {
       document.getElementById('chart-fullscreen').style.display = 'none';
       document.body.style.overflow = '';
+    }
+
+    function chartZoomReset() {
+      chartZoom.scale = 1;
+      chartZoom.tx = 0;
+      chartZoom.ty = 0;
+      applyChartZoom();
+    }
+
+    function applyChartZoom() {
+      var canvas = document.getElementById('growth-chart-canvas-full');
+      if (!canvas) return;
+      canvas.style.transform = 'translate(' + chartZoom.tx + 'px,' + chartZoom.ty + 'px) scale(' + chartZoom.scale + ')';
+    }
+
+    function getTouchDist(t1, t2) {
+      var dx = t1.clientX - t2.clientX, dy = t1.clientY - t2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    var _chartZoomInited = false;
+    function initChartZoomListeners() {
+      if (_chartZoomInited) return;
+      _chartZoomInited = true;
+      var container = document.getElementById('chart-zoom-container');
+
+      container.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 2) {
+          e.preventDefault();
+          chartZoom.pinching = true;
+          chartZoom.panning = false;
+          chartZoom.lastDist = getTouchDist(e.touches[0], e.touches[1]);
+          chartZoom.lastMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+          chartZoom.lastMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        } else if (e.touches.length === 1 && chartZoom.scale > 1) {
+          e.preventDefault();
+          chartZoom.panning = true;
+          chartZoom.pinching = false;
+          chartZoom.panStartX = e.touches[0].clientX;
+          chartZoom.panStartY = e.touches[0].clientY;
+          chartZoom.panTxStart = chartZoom.tx;
+          chartZoom.panTyStart = chartZoom.ty;
+        }
+      }, { passive: false });
+
+      container.addEventListener('touchmove', function(e) {
+        if (chartZoom.pinching && e.touches.length === 2) {
+          e.preventDefault();
+          var dist = getTouchDist(e.touches[0], e.touches[1]);
+          var midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+          var midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+          var ratio = dist / chartZoom.lastDist;
+          var newScale = Math.max(1, Math.min(8, chartZoom.scale * ratio));
+
+          // Zoom toward pinch midpoint
+          chartZoom.tx = midX - (midX - chartZoom.tx) * (newScale / chartZoom.scale) + (midX - chartZoom.lastMidX);
+          chartZoom.ty = midY - (midY - chartZoom.ty) * (newScale / chartZoom.scale) + (midY - chartZoom.lastMidY);
+          chartZoom.scale = newScale;
+          chartZoom.lastDist = dist;
+          chartZoom.lastMidX = midX;
+          chartZoom.lastMidY = midY;
+
+          if (chartZoom.scale <= 1) { chartZoom.tx = 0; chartZoom.ty = 0; chartZoom.scale = 1; }
+          applyChartZoom();
+        } else if (chartZoom.panning && e.touches.length === 1) {
+          e.preventDefault();
+          chartZoom.tx = chartZoom.panTxStart + (e.touches[0].clientX - chartZoom.panStartX);
+          chartZoom.ty = chartZoom.panTyStart + (e.touches[0].clientY - chartZoom.panStartY);
+          applyChartZoom();
+        }
+      }, { passive: false });
+
+      container.addEventListener('touchend', function(e) {
+        if (e.touches.length < 2) chartZoom.pinching = false;
+        if (e.touches.length < 1) chartZoom.panning = false;
+        // Snap back if zoomed out past 1
+        if (chartZoom.scale <= 1) { chartZoom.scale = 1; chartZoom.tx = 0; chartZoom.ty = 0; applyChartZoom(); }
+      });
+
+      // Prevent overlay click-close when zoomed or interacting
+      container.addEventListener('click', function(e) {
+        if (chartZoom.scale > 1) e.stopPropagation();
+      });
     }
 
 
