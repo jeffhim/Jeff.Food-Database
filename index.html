@@ -287,7 +287,7 @@ to{transform:rotate(360deg);}
 </button>
 <button class="dropdown-item" onclick="showCloudSettings()">
 <i class="fas fa-cloud"></i>
-<span>雲端同步設定</span>
+<span>Firebase 雲端同步</span>
 </button>
 <button class="dropdown-item danger" onclick="confirmClearData()">
 <i class="fas fa-trash"></i>
@@ -334,14 +334,15 @@ to{transform:rotate(360deg);}
 <div class="page" id="cloudPage">
 <div class="cloud-sync-section">
 <div class="cloud-sync-title">
-<i class="fas fa-cloud"></i>
-Google 雲端同步
+<i class="fas fa-cloud" style="color: #F57C00;"></i>
+Firebase 雲端同步
 </div>
 <div class="cloud-help" style="margin-bottom: 16px;">
-<strong>📖 雙向同步功能：</strong><br><br>
+<strong>🔥 Firebase 即時同步：</strong><br><br>
 <i class="fas fa-check-circle" style="color: #22c55e;"></i> 在 App 新增/修改資料 → 自動上傳<br>
 <i class="fas fa-check-circle" style="color: #22c55e;"></i> 開啟 App → 自動下載最新資料<br>
-<i class="fas fa-check-circle" style="color: #22c55e;"></i> 多裝置同步
+<i class="fas fa-check-circle" style="color: #22c55e;"></i> 多裝置同步<br>
+<i class="fas fa-check-circle" style="color: #22c55e;"></i> 比 Google Apps Script 快好多
 </div>
 <div id="sheetSyncStatus" class="cloud-status" style="display: none;"></div>
 <div id="lastSyncInfo" style="padding: 12px; background: var(--bg-primary); border-radius: 10px; margin-bottom: 16px;">
@@ -351,7 +352,7 @@ Google 雲端同步
 </div>
 <div id="syncModeIndicator" style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; margin-top: 6px;">
 <i class="fas fa-info-circle"></i>
-<span>尚未設定雲端同步</span>
+<span>尚未設定 Firebase 同步</span>
 </div>
 </div>
 <div style="display: flex; gap: 8px; margin-bottom: 16px;">
@@ -363,19 +364,27 @@ Google 雲端同步
 </button>
 </div>
 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--divider);">
-<div class="form-section-title"><i class="fas fa-cog"></i> Google Apps Script 設定</div>
+<div class="form-section-title"><i class="fas fa-cog" style="color: #F57C00;"></i> Firebase 設定</div>
 <div class="cloud-help" style="margin-bottom: 12px; font-size: 12px;">
 <strong>一次性設定步驟：</strong><br>
-1. <a href="#" onclick="showAppsScriptSetup(); return false;" style="color: var(--accent);">點此查看詳細教學</a><br>
-2. 複製 Apps Script 代碼到 Google<br>
-3. 部署為網頁應用程式<br>
-4. 將網址貼到下方
+1. <a href="#" onclick="showFirebaseSetup(); return false;" style="color: var(--accent);">點此查看詳細教學</a><br>
+2. 到 Firebase Console 建立專案及 Firestore<br>
+3. 將 Project ID 和 API Key 貼到下方<br>
+4. 輸入一個同步密鑰（用於多裝置同步）
 </div>
 <div class="form-group">
-<label class="form-label">Google Apps Script 網址</label>
-<input type="text" class="form-input" id="appsScriptUrl" placeholder="https://script.google.com/macros/s/.../exec">
+<label class="form-label">Firebase Project ID</label>
+<input type="text" class="form-input" id="firebaseProjectId" placeholder="例：my-nutrition-app-12345">
 </div>
-<button class="submit-btn" style="background: #34a853;" onclick="saveAppsScriptUrl()">
+<div class="form-group">
+<label class="form-label">Firebase API Key</label>
+<input type="text" class="form-input" id="firebaseApiKey" placeholder="例：AIzaSy...">
+</div>
+<div class="form-group">
+<label class="form-label">同步密鑰（自訂，用於識別你的資料）</label>
+<input type="text" class="form-input" id="firebaseSyncKey" placeholder="例：my-nutrition-data">
+</div>
+<button class="submit-btn" style="background: #F57C00;" onclick="saveFirebaseConfig()">
 <i class="fas fa-save"></i> 儲存並測試連接
 </button>
 <div style="margin-top: 12px;">
@@ -867,7 +876,7 @@ function openDatabase() {
   let showPer100gSet = new Set();
   let formInputMode = 'per100g';
   let aiImportInputMode = 'per100g';
-  let cloudSyncUrl = '';
+  let _firebaseConfig = { projectId: '', apiKey: '', syncKey: '' };
   const N=null;
 const _F=function(d){return d.map(function(r){
 var f={id:r[0],name:r[1],nameEn:r[2],category:r[3],source:r[6]||null,brand:r[7]||null};
@@ -1285,6 +1294,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await openDatabase();
     await loadFromIndexedDB();
     await loadDocs();
+    await loadFirebaseConfig();
     const savedAutoSync = await loadAutoSyncSetting();
     autoSyncEnabled = savedAutoSync;
     setTimeout(autoSyncOnLoad, 1000);
@@ -2303,34 +2313,15 @@ document.addEventListener('DOMContentLoaded', async () => {
    doAutoSync();
   }
   async function doAutoSync() {
-   let url = memorySettings.appsScriptUrl;
-   if (!url && db) {
-    try {
-     const tx = db.transaction(['settings'], 'readonly');
-     const store = tx.objectStore('settings');
-     const result = await new Promise(resolve => {
-      const req = store.get('appsScriptUrl');
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => resolve(null);
-     });
-     url = result ? result.value : '';
-     if (url) memorySettings.appsScriptUrl = url;
-    } catch (e) { }
-   }
-   if (!url) return;
+   if (!_firebaseConfig.projectId || !_firebaseConfig.apiKey || !_firebaseConfig.syncKey) return;
    showToast('正在同步...');
    try {
-    await fetch(url, {
-     method: 'POST',
-     mode: 'no-cors',
-     headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify({
-      foods: foods,
-      categories: categories,
-      categoryEmojis: categoryEmojis,
-      savedDocs: savedDocs,
-      lastUpdated: new Date().toISOString()
-     })
+    await firebaseWrite({
+     foods: foods,
+     categories: categories,
+     categoryEmojis: categoryEmojis,
+     savedDocs: savedDocs,
+     lastUpdated: new Date().toISOString()
     });
     showToast('已同步 ✓');
    } catch (e) {
@@ -3425,405 +3416,6 @@ document.addEventListener('DOMContentLoaded', async () => {
    closeAIImportModal();
    showToast(`成功匯入 ${addedCount} 款食物到「${targetCategory}」`);
   }
-  async function loadCloudUrl() {
-   if (!db) return;
-   try {
-    const tx = db.transaction(['settings'], 'readonly');
-    const store = tx.objectStore('settings');
-    const result = await new Promise((resolve, reject) => {
-     const req = store.get('cloudSyncUrl');
-     req.onsuccess = () => resolve(req.result);
-     req.onerror = reject;
-    });
-    if (result && result.value) {
-     cloudSyncUrl = result.value;
-     document.getElementById('cloudUrl').value = cloudSyncUrl;
-    }
-   } catch (err) {
-       }
-  }
-  async function saveCloudUrl() {
-   cloudSyncUrl = document.getElementById('cloudUrl').value.trim();
-   if (!db) {
-    showToast('儲存失敗');
-    return;
-   }
-   try {
-    const tx = db.transaction(['settings'], 'readwrite');
-    const store = tx.objectStore('settings');
-    await new Promise((resolve, reject) => {
-     const req = store.put({ key: 'cloudSyncUrl', value: cloudSyncUrl });
-     req.onsuccess = resolve;
-     req.onerror = reject;
-    });
-    showToast('已儲存網址設定');
-   } catch (err) {
-    showToast('儲存失敗');
-    console.error(err);
-   }
-  }
-  function setCloudStatus(message, type) {
-   const status = document.getElementById('cloudStatus');
-   status.textContent = message;
-   status.className = 'cloud-status';
-   if (type) {
-    status.classList.add(type);
-   }
-   status.style.display = message ? 'block' : 'none';
-  }
-  async function uploadToCloud() {
-   const url = document.getElementById('cloudUrl').value.trim();
-   if (!url) {
-    setCloudStatus('請先輸入 Google Apps Script 網址', 'error');
-    return;
-   }
-   const uploadBtn = document.getElementById('cloudUploadBtn');
-   uploadBtn.disabled = true;
-   uploadBtn.classList.add('loading');
-   uploadBtn.innerHTML = '<i class="fas fa-spinner"></i> 上傳中...';
-   setCloudStatus('正在上傳資料...', '');
-   try {
-    const data = {
-     foods: foods,
-     categories: categories,
-     lastUpdated: new Date().toISOString()
-    };
-    const response = await fetch(url, {
-     method: 'POST',
-     mode: 'no-cors',
-     headers: {
-      'Content-Type': 'application/json',
-     },
-     body: JSON.stringify(data)
-    });
-    setCloudStatus('✅ 已上傳到雲端！', 'success');
-    showToast('已上傳到雲端');
-   } catch (err) {
-    setCloudStatus('上傳失敗：' + err.message, 'error');
-    showToast('上傳失敗');
-   } finally {
-    uploadBtn.disabled = false;
-    uploadBtn.classList.remove('loading');
-    uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> 上傳到雲端';
-   }
-  }
-  async function downloadFromCloud() {
-   const url = document.getElementById('cloudUrl').value.trim();
-   if (!url) {
-    setCloudStatus('請先輸入 Google Apps Script 網址', 'error');
-    return;
-   }
-   const downloadBtn = document.getElementById('cloudDownloadBtn');
-   downloadBtn.disabled = true;
-   downloadBtn.classList.add('loading');
-   downloadBtn.innerHTML = '<i class="fas fa-spinner"></i> 下載中...';
-   setCloudStatus('正在從雲端下載資料...', '');
-   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-     throw new Error('網絡錯誤');
-    }
-    const data = await response.json();
-    if (data.foods && Array.isArray(data.foods)) {
-     foods = data.foods;
-    }
-    if (data.categories && Array.isArray(data.categories)) {
-     categories = data.categories;
-    }
-    renderCategories();
-    renderCategoryPills();
-    renderFoodList();
-    updateStats();
-    saveToIndexedDB();
-    const lastUpdated = data.lastUpdated ? new Date(data.lastUpdated).toLocaleString('zh-HK') : '未知';
-    setCloudStatus(`✅ 已同步！上次更新：${lastUpdated}`, 'success');
-    showToast('已從雲端下載資料');
-   } catch (err) {
-    setCloudStatus('下載失敗：' + err.message, 'error');
-    showToast('下載失敗');
-   } finally {
-    downloadBtn.disabled = false;
-    downloadBtn.classList.remove('loading');
-    downloadBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> 從雲端下載';
-   }
-  }
-  const defaultFoods = JSON.parse(JSON.stringify(foods));
-  const defaultCategories = [...categories];
-  const defaultCategoryEmojis = {...categoryEmojis};
-  function setSheetSyncStatus(message, type) {
-   const status = document.getElementById('sheetSyncStatus');
-   if (!status) return;
-   status.innerHTML = message;
-   status.style.display = message ? 'block' : 'none';
-   status.style.background = type === 'success' ? 'rgba(34, 197, 94, 0.1)' :
-                type === 'error' ? 'rgba(239, 68, 68, 0.1)' :
-                'rgba(99, 102, 241, 0.1)';
-   status.style.color = type === 'success' ? '#22c55e' :
-             type === 'error' ? '#ef4444' :
-             'var(--text-secondary)';
-  }
-  async function loadGoogleSheetUrl() {
-   if (!db) return '';
-   try {
-    const tx = db.transaction(['settings'], 'readonly');
-    const store = tx.objectStore('settings');
-    const result = await new Promise((resolve, reject) => {
-     const req = store.get('googleSheetUrl');
-     req.onsuccess = () => resolve(req.result);
-     req.onerror = reject;
-    });
-    return result ? result.value : '';
-   } catch (err) {
-    return '';
-   }
-  }
-  async function saveGoogleSheetUrl() {
-   const url = document.getElementById('googleSheetUrl').value.trim();
-   if (!url) {
-    showToast('請輸入 Google Sheets 網址');
-    return;
-   }
-   setSheetSyncStatus('<i class="fas fa-spinner fa-spin"></i> 正在測試連接...', '');
-   try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('無法連接到 Google Sheets');
-    const csvText = await response.text();
-    const lines = csvText.trim().split('\n');
-    if (lines.length < 2) throw new Error('Google Sheet 沒有資料');
-    if (db) {
-     const tx = db.transaction(['settings'], 'readwrite');
-     const store = tx.objectStore('settings');
-     await new Promise((resolve, reject) => {
-      const req = store.put({ key: 'googleSheetUrl', value: url });
-      req.onsuccess = resolve;
-      req.onerror = reject;
-     });
-    }
-    setSheetSyncStatus(`<i class="fas fa-check-circle"></i> 連接成功！找到 ${lines.length - 1} 筆資料`, 'success');
-    showToast('設定已儲存，連接成功！');
-   } catch (err) {
-    setSheetSyncStatus('<i class="fas fa-exclamation-circle"></i> ' + err.message, 'error');
-    showToast('連接失敗：' + err.message);
-   }
-  }
-  async function loadLastSyncTime() {
-   if (!db) return null;
-   try {
-    const tx = db.transaction(['settings'], 'readonly');
-    const store = tx.objectStore('settings');
-    const result = await new Promise((resolve, reject) => {
-     const req = store.get('lastSyncTime');
-     req.onsuccess = () => resolve(req.result);
-     req.onerror = reject;
-    });
-    return result ? result.value : null;
-   } catch (err) {
-    return null;
-   }
-  }
-  async function saveLastSyncTime() {
-   if (!db) return;
-   const now = new Date().toISOString();
-   try {
-    const tx = db.transaction(['settings'], 'readwrite');
-    const store = tx.objectStore('settings');
-    await new Promise((resolve, reject) => {
-     const req = store.put({ key: 'lastSyncTime', value: now });
-     req.onsuccess = resolve;
-     req.onerror = reject;
-    });
-    updateLastSyncDisplay(now);
-   } catch (err) {
-       }
-  }
-  function updateLastSyncDisplay(isoTime) {
-   const el = document.getElementById('lastSyncTime');
-   if (el && isoTime) {
-    const date = new Date(isoTime);
-    el.textContent = date.toLocaleString('zh-HK');
-   }
-  }
-  function parseCSVToFoods(csvText) {
-   const lines = csvText.trim().split('\n');
-   if (lines.length < 2) return [];
-   const headers = parseCSVLine(lines[0]);
-   const foodsData = [];
-   for (let i = 1; i < lines.length; i++) {
-    const values = parseCSVLine(lines[i]);
-    if (values.length < 3) continue; // Skip invalid rows
-    const row = {};
-    headers.forEach((h, idx) => {
-     row[h.trim()] = values[idx] ? values[idx].trim() : '';
-    });
-    const food = {
-     id: row['id'] || String(i),
-     name: row['name'] || row['名稱'] || '',
-     nameEn: row['nameEn'] || row['英文名稱'] || '',
-     category: row['category'] || row['分類'] || '其他',
-     per100g: {
-      calories: parseFloat(row['calories_100g'] || row['卡路里_100g']) || null,
-      protein: parseFloat(row['protein_100g'] || row['蛋白質_100g']) || null,
-      fat: parseFloat(row['fat_100g'] || row['脂肪_100g']) || null,
-      carbs: parseFloat(row['carbs_100g'] || row['碳水化合物_100g']) || null,
-      sodium: parseFloat(row['sodium_100g'] || row['鈉_100g']) || null,
-      calcium: parseFloat(row['calcium_100g'] || row['鈣_100g']) || null,
-      sugar: parseFloat(row['sugar_100g'] || row['糖_100g']) || null,
-      fiber: parseFloat(row['fiber_100g'] || row['纖維_100g']) || null
-     }
-    };
-    const servingWeight = parseFloat(row['serving_weight'] || row['每份重量']);
-    if (servingWeight) {
-     food.perServing = {
-      weight: servingWeight,
-      calories: parseFloat(row['calories_serving'] || row['卡路里_每份']) || null,
-      protein: parseFloat(row['protein_serving'] || row['蛋白質_每份']) || null,
-      fat: parseFloat(row['fat_serving'] || row['脂肪_每份']) || null,
-      carbs: parseFloat(row['carbs_serving'] || row['碳水化合物_每份']) || null,
-      sodium: parseFloat(row['sodium_serving'] || row['鈉_每份']) || null,
-      calcium: parseFloat(row['calcium_serving'] || row['鈣_每份']) || null,
-      sugar: parseFloat(row['sugar_serving'] || row['糖_每份']) || null,
-      fiber: parseFloat(row['fiber_serving'] || row['纖維_每份']) || null
-     };
-    }
-    if (food.name) {
-     foodsData.push(food);
-    }
-   }
-   return foodsData;
-  }
-  function parseCSVLine(line) {
-   const result = [];
-   let current = '';
-   let inQuotes = false;
-   for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    if (char === '"') {
-     inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-     result.push(current);
-     current = '';
-    } else {
-     current += char;
-    }
-   }
-   result.push(current);
-   return result;
-  }
-  async function syncFromGoogleSheet() {
-   const btn = document.getElementById('sheetSyncBtn');
-   if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 同步中...';
-   }
-   setSheetSyncStatus('<i class="fas fa-spinner fa-spin"></i> 正在從 Google Sheets 獲取資料...', '');
-   try {
-    const sheetUrl = await loadGoogleSheetUrl();
-    if (!sheetUrl) {
-     setSheetSyncStatus('<i class="fas fa-info-circle"></i> 尚未設定 Google Sheets 網址', '');
-     showToast('請先設定 Google Sheets 網址');
-     return;
-    }
-    const response = await fetch(sheetUrl);
-    if (!response.ok) throw new Error('無法連接到 Google Sheets');
-    const csvText = await response.text();
-    const newFoods = parseCSVToFoods(csvText);
-    if (newFoods.length === 0) {
-     throw new Error('沒有找到有效的食物資料');
-    }
-    foods = newFoods;
-    const newCategories = [...new Set(newFoods.map(f => f.category))];
-    categories = newCategories.filter(c => c);
-    renderCategories();
-    renderCategoryPills();
-    renderFoodList();
-    updateStats();
-    saveToIndexedDB();
-    await saveLastSyncTime();
-    setSheetSyncStatus(`<i class="fas fa-check-circle"></i> 同步成功！已載入 ${newFoods.length} 款食物`, 'success');
-    showToast(`已同步 ${newFoods.length} 款食物`);
-   } catch (err) {
-    console.error('Google Sheet sync error:', err);
-    setSheetSyncStatus('<i class="fas fa-exclamation-circle"></i> 同步失敗：' + err.message, 'error');
-    showToast('同步失敗');
-   } finally {
-    if (btn) {
-     btn.disabled = false;
-     btn.innerHTML = '<i class="fas fa-sync"></i> 立即同步最新資料';
-    }
-   }
-  }
-  function showSheetTemplate() {
-   const modal = document.createElement('div');
-   modal.className = 'modal-overlay show';
-   modal.innerHTML = `
-    <div class="modal" style="max-width: 95vw; max-height: 85vh;">
-     <div class="modal-header">
-      <span class="modal-title">Google Sheets 模板格式</span>
-      <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
-       <i class="fas fa-times"></i>
-      </button>
-     </div>
-     <div class="modal-body" style="overflow-x: auto;">
-      <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 13px;">
-       在 Google Sheets 建立以下欄位（第一行為標題）：
-      </p>
-      <div style="overflow-x: auto; margin-bottom: 16px;">
-       <table style="border-collapse: collapse; font-size: 11px; white-space: nowrap;">
-        <tr style="background: var(--accent); color: white;">
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">id</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">name</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">nameEn</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">category</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">calories_100g</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">protein_100g</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">fat_100g</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">carbs_100g</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">sodium_100g</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">calcium_100g</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">serving_weight</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">calories_serving</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">protein_serving</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">fat_serving</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">carbs_serving</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">sodium_serving</th>
-         <th style="padding: 6px 8px; border: 1px solid var(--divider);">calcium_serving</th>
-        </tr>
-        <tr>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">1</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">蝦餃</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">Shrimp dumpling</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">點心</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">140</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">7.8</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">3.3</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">19</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">370</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">34</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">71</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">100</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">5.6</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">2.4</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">14</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">260</td>
-         <td style="padding: 6px 8px; border: 1px solid var(--divider);">24</td>
-        </tr>
-       </table>
-      </div>
-      <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 12px;">
-       <strong>提示：</strong><br>
-       • 第一行必須是欄位標題<br>
-       • id、name、category 為必填<br>
-       • 數值欄位留空會顯示為 "--"<br>
-       • serving_weight 開始的欄位為選填
-      </p>
-      <button class="submit-btn" onclick="exportToCSV(); this.closest('.modal-overlay').remove();">
-       <i class="fas fa-download"></i> 匯出目前資料為 CSV（可直接匯入 Google Sheets）
-      </button>
-     </div>
-    </div>
-   `;
-   document.body.appendChild(modal);
-  }
   function exportToCSV() {
    const headers = ['id', 'name', 'nameEn', 'category', 'calories_100g', 'protein_100g', 'fat_100g', 'carbs_100g', 'sodium_100g', 'calcium_100g', 'sugar_100g', 'fiber_100g', 'serving_weight', 'calories_serving', 'protein_serving', 'fat_serving', 'carbs_serving', 'sodium_serving', 'calcium_serving', 'sugar_serving', 'fiber_serving'];
    let csv = headers.join(',') + '\n';
@@ -3920,170 +3512,231 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   let autoSyncEnabled = false;
   let _syncLock = false;
-  async function loadAppsScriptUrl() {
-   if (memorySettings.appsScriptUrl) {
-    return memorySettings.appsScriptUrl;
-   }
-   if (!db) {
-    return '';
-   }
-   try {
-    return await new Promise((resolve) => {
-     const tx = db.transaction(['settings'], 'readonly');
-     const store = tx.objectStore('settings');
-     const req = store.get('appsScriptUrl');
-     req.onsuccess = () => resolve(req.result ? req.result.value : '');
-     req.onerror = () => resolve('');
-    });
-   } catch (err) {
-        return '';
-   }
+
+  /* ===== Firebase Firestore REST API ===== */
+  function _fbUrl() {
+   return 'https://firestore.googleapis.com/v1/projects/' + _firebaseConfig.projectId + '/databases/(default)/documents/nutrition/' + _firebaseConfig.syncKey + '?key=' + _firebaseConfig.apiKey;
   }
-  async function saveAppsScriptUrl() {
-   const url = document.getElementById('appsScriptUrl').value.trim();
-   if (!url) {
-    showToast('請輸入 Google Apps Script 網址');
+
+  async function firebaseWrite(data) {
+   const body = { fields: { data: { stringValue: JSON.stringify(data) }, lastUpdated: { stringValue: new Date().toISOString() } } };
+   const res = await fetch(_fbUrl(), {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+   });
+   if (!res.ok) {
+    const err = await res.json().catch(function(){return {};});
+    throw new Error(err.error?.message || '上傳失敗 (' + res.status + ')');
+   }
+   return res.json();
+  }
+
+  async function firebaseRead() {
+   const res = await fetch(_fbUrl());
+   if (res.status === 404) return null; // Document doesn't exist yet
+   if (!res.ok) {
+    const err = await res.json().catch(function(){return {};});
+    throw new Error(err.error?.message || '下載失敗 (' + res.status + ')');
+   }
+   const doc = await res.json();
+   if (doc.fields && doc.fields.data && doc.fields.data.stringValue) {
+    return JSON.parse(doc.fields.data.stringValue);
+   }
+   return null;
+  }
+
+  async function loadFirebaseConfig() {
+   if (!db) return;
+   try {
+    const tx = db.transaction(['settings'], 'readonly');
+    const store = tx.objectStore('settings');
+    const r = await new Promise(function(resolve) {
+     var req = store.get('firebaseConfig');
+     req.onsuccess = function() { resolve(req.result); };
+     req.onerror = function() { resolve(null); };
+    });
+    if (r && r.value) {
+     _firebaseConfig = r.value;
+    }
+   } catch (e) {}
+  }
+
+  async function saveFirebaseConfigToDB(config) {
+   _firebaseConfig = config;
+   if (!db) { memorySettings.firebaseConfig = config; return; }
+   try {
+    const tx = db.transaction(['settings'], 'readwrite');
+    const store = tx.objectStore('settings');
+    await new Promise(function(resolve, reject) {
+     var req = store.put({ key: 'firebaseConfig', value: config });
+     req.onsuccess = resolve;
+     req.onerror = reject;
+    });
+   } catch (e) {}
+  }
+
+  async function saveFirebaseConfig() {
+   var projectId = document.getElementById('firebaseProjectId').value.trim();
+   var apiKey = document.getElementById('firebaseApiKey').value.trim();
+   var syncKey = document.getElementById('firebaseSyncKey').value.trim();
+   if (!projectId || !apiKey || !syncKey) {
+    showToast('請填寫所有欄位');
     return;
    }
    setSheetSyncStatus('<i class="fas fa-spinner fa-spin"></i> 正在測試連接...', '');
+   var config = { projectId: projectId, apiKey: apiKey, syncKey: syncKey };
    try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('無法連接');
-    const data = await response.json();
-    if (!data.success) throw new Error(data.error || '連接失敗');
-    memorySettings.appsScriptUrl = url;
-    if (db) {
-     try {
-      const tx = db.transaction(['settings'], 'readwrite');
-      const store = tx.objectStore('settings');
-      await new Promise((resolve, reject) => {
-       const req = store.put({ key: 'appsScriptUrl', value: url });
-       req.onsuccess = resolve;
-       req.onerror = reject;
-      });
-     } catch (e) {
-           }
-    }
-    const count = data.data?.foods?.length || 0;
-    setSheetSyncStatus(`<i class="fas fa-check-circle"></i> 連接成功！雲端有 ${count} 款食物`, 'success');
-    showToast('設定已儲存！');
+    // Test connection by trying to read
+    _firebaseConfig = config;
+    var data = await firebaseRead();
+    await saveFirebaseConfigToDB(config);
+    var count = (data && data.foods) ? data.foods.length : 0;
+    setSheetSyncStatus('<i class="fas fa-check-circle"></i> 連接成功！' + (count > 0 ? '雲端有 ' + count + ' 款食物' : '雲端暫無資料'), 'success');
+    showToast('Firebase 設定已儲存！');
     updateSyncModeIndicator(true);
    } catch (err) {
     setSheetSyncStatus('<i class="fas fa-exclamation-circle"></i> ' + err.message, 'error');
-    showToast('連接失敗');
+    showToast('連接失敗：' + err.message);
+    _firebaseConfig = { projectId: '', apiKey: '', syncKey: '' };
    }
   }
+
   function updateSyncModeIndicator(connected) {
-   const indicator = document.getElementById('syncModeIndicator');
+   var indicator = document.getElementById('syncModeIndicator');
    if (indicator) {
     if (connected) {
-     indicator.innerHTML = '<i class="fas fa-check-circle" style="color: #22c55e;"></i><span style="color: #22c55e;">已連接雲端</span>';
+     indicator.innerHTML = '<i class="fas fa-check-circle" style="color: #22c55e;"></i><span style="color: #22c55e;">已連接 Firebase</span>';
     } else {
-     indicator.innerHTML = '<i class="fas fa-info-circle"></i><span>尚未設定雲端同步</span>';
+     indicator.innerHTML = '<i class="fas fa-info-circle"></i><span>尚未設定 Firebase 同步</span>';
     }
    }
   }
+
+  function setSheetSyncStatus(message, type) {
+   var status = document.getElementById('sheetSyncStatus');
+   if (!status) return;
+   status.innerHTML = message;
+   status.style.display = message ? 'block' : 'none';
+   status.style.background = type === 'success' ? 'rgba(34, 197, 94, 0.1)' :
+                type === 'error' ? 'rgba(239, 68, 68, 0.1)' :
+                'rgba(99, 102, 241, 0.1)';
+   status.style.color = type === 'success' ? '#22c55e' :
+             type === 'error' ? '#ef4444' :
+             'var(--text-secondary)';
+  }
+
+  async function loadLastSyncTime() {
+   if (!db) return null;
+   try {
+    var tx = db.transaction(['settings'], 'readonly');
+    var store = tx.objectStore('settings');
+    var result = await new Promise(function(resolve, reject) {
+     var req = store.get('lastSyncTime');
+     req.onsuccess = function() { resolve(req.result); };
+     req.onerror = reject;
+    });
+    return result ? result.value : null;
+   } catch (err) {
+    return null;
+   }
+  }
+
+  async function saveLastSyncTime() {
+   if (!db) return;
+   var now = new Date().toISOString();
+   try {
+    var tx = db.transaction(['settings'], 'readwrite');
+    var store = tx.objectStore('settings');
+    await new Promise(function(resolve, reject) {
+     var req = store.put({ key: 'lastSyncTime', value: now });
+     req.onsuccess = resolve;
+     req.onerror = reject;
+    });
+    updateLastSyncDisplay(now);
+   } catch (err) {}
+  }
+
+  function updateLastSyncDisplay(isoTime) {
+   var el = document.getElementById('lastSyncTime');
+   if (el && isoTime) {
+    var date = new Date(isoTime);
+    el.textContent = date.toLocaleString('zh-HK');
+   }
+  }
+
   async function toggleAutoSync() {
    autoSyncEnabled = document.getElementById('autoSyncCheckbox').checked;
-      memorySettings.autoSyncEnabled = autoSyncEnabled;
+   memorySettings.autoSyncEnabled = autoSyncEnabled;
    if (db) {
     try {
-     const tx = db.transaction(['settings'], 'readwrite');
-     const store = tx.objectStore('settings');
-     await new Promise((resolve, reject) => {
-      const req = store.put({ key: 'autoSyncEnabled', value: autoSyncEnabled });
-      req.onsuccess = () => {
-              resolve();
-      };
-      req.onerror = () => {
-              reject();
-      };
+     var tx = db.transaction(['settings'], 'readwrite');
+     var store = tx.objectStore('settings');
+     await new Promise(function(resolve, reject) {
+      var req = store.put({ key: 'autoSyncEnabled', value: autoSyncEnabled });
+      req.onsuccess = resolve;
+      req.onerror = reject;
      });
-    } catch (err) {
-         }
+    } catch (err) {}
    }
    showToast(autoSyncEnabled ? '已啟用自動同步' : '已停用自動同步');
-   if (autoSyncEnabled) {
-        autoUploadIfEnabled();
-   }
+   if (autoSyncEnabled) autoUploadIfEnabled();
   }
+
   async function loadAutoSyncSetting() {
-   if (memorySettings.autoSyncEnabled !== undefined) {
-    return memorySettings.autoSyncEnabled;
-   }
+   if (memorySettings.autoSyncEnabled !== undefined) return memorySettings.autoSyncEnabled;
    if (!db) return false;
    try {
-    return await new Promise((resolve) => {
-     const tx = db.transaction(['settings'], 'readonly');
-     const store = tx.objectStore('settings');
-     const req = store.get('autoSyncEnabled');
-     req.onsuccess = () => resolve(req.result ? req.result.value : false);
-     req.onerror = () => resolve(false);
+    return await new Promise(function(resolve) {
+     var tx = db.transaction(['settings'], 'readonly');
+     var store = tx.objectStore('settings');
+     var req = store.get('autoSyncEnabled');
+     req.onsuccess = function() { resolve(req.result ? req.result.value : false); };
+     req.onerror = function() { resolve(false); };
     });
    } catch (err) {
-        return false;
+    return false;
    }
   }
+
   async function syncToCloud() {
-   const url = await loadAppsScriptUrl();
-   if (!url) {
-    showToast('請先設定 Google Apps Script 網址');
+   if (!_firebaseConfig.projectId || !_firebaseConfig.apiKey || !_firebaseConfig.syncKey) {
+    showToast('請先設定 Firebase');
     return;
    }
-   const btn = document.getElementById('cloudUploadBtn');
+   var btn = document.getElementById('cloudUploadBtn');
    if (btn) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上傳中...';
    }
-   setSheetSyncStatus('<i class="fas fa-spinner fa-spin"></i> 正在上傳到雲端...', '');
+   setSheetSyncStatus('<i class="fas fa-spinner fa-spin"></i> 正在上傳到 Firebase...', '');
    try {
-    const dataToSend = {
+    var dataToSend = {
      foods: foods,
      categories: categories,
      categoryEmojis: categoryEmojis,
      savedDocs: savedDocs,
      lastUpdated: new Date().toISOString()
     };
-    await fetch(url, {
-     method: 'POST',
-     mode: 'no-cors',
-     headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify(dataToSend)
-    });
-    setSheetSyncStatus('<i class="fas fa-spinner fa-spin"></i> 正在驗證上傳...', '');
-    await new Promise(function(r){setTimeout(r, 2000);});
-    try {
-     const vResp = await fetch(url);
-     if (vResp.ok) {
-      const vResult = await vResp.json();
-      if (vResult.success && vResult.data && vResult.data.foods) {
-       const cloudCount = vResult.data.foods.length;
-       await saveLastSyncTime();
-       if (cloudCount === foods.length) {
-        setSheetSyncStatus('<i class="fas fa-check-circle"></i> 上傳成功！雲端共 ' + cloudCount + ' 款食物（已驗證）', 'success');
-        showToast('已上傳到雲端 ✓ ' + cloudCount + ' 款食物');
-       } else {
-        setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 上傳可能未完成：雲端 ' + cloudCount + ' 款 / 本地 ' + foods.length + ' 款', 'error');
-        showToast('⚠️ 雲端只有 ' + cloudCount + ' 款，請重試');
-       }
-      } else {
-       setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 已上傳但無法驗證雲端資料', 'error');
-       showToast('上傳完成但驗證失敗');
-      }
-     } else {
-      await saveLastSyncTime();
-      setSheetSyncStatus('<i class="fas fa-check-circle"></i> 已上傳（無法驗證，共送出 ' + foods.length + ' 款）', 'success');
-      showToast('已上傳到雲端');
-     }
-    } catch (verifyErr) {
-     await saveLastSyncTime();
-     setSheetSyncStatus('<i class="fas fa-check-circle"></i> 已上傳（無法驗證，共送出 ' + foods.length + ' 款）', 'success');
-     showToast('已上傳到雲端');
+    await firebaseWrite(dataToSend);
+    // Verify by reading back
+    var verifyData = await firebaseRead();
+    var cloudCount = (verifyData && verifyData.foods) ? verifyData.foods.length : 0;
+    await saveLastSyncTime();
+    if (cloudCount === foods.length) {
+     setSheetSyncStatus('<i class="fas fa-check-circle"></i> 上傳成功！雲端共 ' + cloudCount + ' 款食物（已驗證）', 'success');
+     showToast('已上傳到 Firebase ✓ ' + cloudCount + ' 款食物');
+    } else if (cloudCount > 0) {
+     setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 上傳可能未完成：雲端 ' + cloudCount + ' 款 / 本地 ' + foods.length + ' 款', 'error');
+     showToast('⚠️ 雲端只有 ' + cloudCount + ' 款，請重試');
+    } else {
+     setSheetSyncStatus('<i class="fas fa-check-circle"></i> 已上傳（共送出 ' + foods.length + ' 款）', 'success');
+     showToast('已上傳到 Firebase');
     }
    } catch (err) {
     console.error('Upload error:', err);
     setSheetSyncStatus('<i class="fas fa-exclamation-circle"></i> 上傳失敗：' + err.message, 'error');
-    showToast('上傳失敗');
+    showToast('上傳失敗：' + err.message);
    } finally {
     if (btn) {
      btn.disabled = false;
@@ -4091,26 +3744,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
    }
   }
+
   async function syncFromCloud() {
-   const url = await loadAppsScriptUrl();
-   if (!url) {
-    showToast('請先設定 Google Apps Script 網址');
+   if (!_firebaseConfig.projectId || !_firebaseConfig.apiKey || !_firebaseConfig.syncKey) {
+    showToast('請先設定 Firebase');
     return;
    }
-   const btn = document.getElementById('cloudDownloadBtn');
+   var btn = document.getElementById('cloudDownloadBtn');
    if (btn) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 下載中...';
    }
-   setSheetSyncStatus('<i class="fas fa-spinner fa-spin"></i> 正在從雲端下載...', '');
+   setSheetSyncStatus('<i class="fas fa-spinner fa-spin"></i> 正在從 Firebase 下載...', '');
    try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('無法連接');
-    const result = await response.json();
-    if (!result.success) throw new Error(result.error || '下載失敗');
-    const data = result.data;
-    const cloudFoodCount = (data.foods && Array.isArray(data.foods)) ? data.foods.length : 0;
-    const localFoodCount = foods.length;
+    var data = await firebaseRead();
+    if (!data) {
+     setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 雲端沒有資料', 'error');
+     showToast('雲端暫無資料');
+     return;
+    }
+    var cloudFoodCount = (data.foods && Array.isArray(data.foods)) ? data.foods.length : 0;
+    var localFoodCount = foods.length;
     if (cloudFoodCount > 0 && cloudFoodCount < localFoodCount * 0.5) {
      setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 雲端只有 ' + cloudFoodCount + ' 款，本地有 ' + localFoodCount + ' 款。已阻止下載以保護本地資料。請先上傳恢復雲端。', 'error');
      showToast('⚠️ 雲端資料異常（' + cloudFoodCount + ' 款），已阻止覆蓋');
@@ -4138,11 +3792,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
      });
      foods = data.foods;
-     if (data.categories && Array.isArray(data.categories)) {
-      categories = data.categories;
-     }
+     if (data.categories && Array.isArray(data.categories)) categories = data.categories;
      if (data.categoryEmojis) {
-      Object.keys(categoryEmojis).forEach(k => delete categoryEmojis[k]);
+      Object.keys(categoryEmojis).forEach(function(k){ delete categoryEmojis[k]; });
       Object.assign(categoryEmojis, data.categoryEmojis);
      }
      if (data.savedDocs && Array.isArray(data.savedDocs)) {
@@ -4156,7 +3808,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      saveToIndexedDB();
      await saveLastSyncTime();
      setSheetSyncStatus('<i class="fas fa-check-circle"></i> 下載成功！雲端共 ' + cloudFoodCount + ' 款食物', 'success');
-     showToast('已從雲端下載 ' + cloudFoodCount + ' 款食物');
+     showToast('已從 Firebase 下載 ' + cloudFoodCount + ' 款食物');
     } else {
      setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 雲端沒有食物資料，保留本地 ' + localFoodCount + ' 款', 'error');
      showToast('⚠️ 雲端沒有食物資料');
@@ -4164,7 +3816,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    } catch (err) {
     console.error('Download error:', err);
     setSheetSyncStatus('<i class="fas fa-exclamation-circle"></i> ' + err.message, 'error');
-    showToast('下載失敗');
+    showToast('下載失敗：' + err.message);
    } finally {
     if (btn) {
      btn.disabled = false;
@@ -4172,168 +3824,141 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
    }
   }
+
   async function autoUploadIfEnabled() {
    if (!autoSyncEnabled || _syncLock) return;
-   if (foods.length === 0) {
-    console.log('Auto-upload skipped: no items');
-    return;
-   }
-   const url = await loadAppsScriptUrl();
-   if (!url) return;
+   if (foods.length === 0) return;
+   if (!_firebaseConfig.projectId || !_firebaseConfig.apiKey || !_firebaseConfig.syncKey) return;
    try {
-    const dataToSend = {
+    showToast('正在自動同步...', 1000);
+    await firebaseWrite({
      foods: foods,
      categories: categories,
      categoryEmojis: categoryEmojis,
      savedDocs: savedDocs,
      lastUpdated: new Date().toISOString()
-    };
-    showToast('正在自動同步...', 1000);
-    await fetch(url, {
-     method: 'POST',
-     mode: 'no-cors',
-     headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify(dataToSend)
     });
-    showToast('已自動同步到雲端 ✓ (' + foods.length + ' 款)', 1500);
+    showToast('已自動同步到 Firebase ✓ (' + foods.length + ' 款)', 1500);
    } catch (err) {
     console.log('Auto-sync failed:', err.message);
     showToast('自動同步失敗', 1500);
    }
   }
-  function showAppsScriptSetup() {
-   const scriptCode = "// Google Apps Script 代碼 - 複製此代碼到 Google Apps Script\n\nconst SCRIPT_PROP = PropertiesService.getScriptProperties();\n\nfunction doGet(e) {\n  try {\n    const data = SCRIPT_PROP.getProperty('nutritionData');\n    return ContentService\n      .createTextOutput(JSON.stringify({\n        success: true,\n        data: data ? JSON.parse(data) : { foods: [], categories: [], categoryEmojis: {} }\n      }))\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch (err) {\n    return ContentService\n      .createTextOutput(JSON.stringify({ success: false, error: err.message }))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}\n\nfunction doPost(e) {\n  try {\n    const data = JSON.parse(e.postData.contents);\n    SCRIPT_PROP.setProperty('nutritionData', JSON.stringify(data));\n    return ContentService\n      .createTextOutput(JSON.stringify({ success: true }))\n      .setMimeType(ContentService.MimeType.JSON);\n  } catch (err) {\n    return ContentService\n      .createTextOutput(JSON.stringify({ success: false, error: err.message }))\n      .setMimeType(ContentService.MimeType.JSON);\n  }\n}";
-   const modal = document.createElement('div');
+
+  function showFirebaseSetup() {
+   var firestoreRules = 'rules_version = \u00272\u0027;\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /nutrition/{docId} {\n      allow read, write: if true;\n    }\n  }\n}';
+   var modal = document.createElement('div');
    modal.className = 'modal-overlay show';
-   modal.innerHTML = `
-    <div class="modal" style="max-width: 95vw; max-height: 90vh;">
-     <div class="modal-header">
-      <span class="modal-title">Google Apps Script 設定教學</span>
-      <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
-       <i class="fas fa-times"></i>
-      </button>
-     </div>
-     <div class="modal-body" style="overflow-y: auto; max-height: 70vh;">
-      <div style="margin-bottom: 16px;">
-       <strong>步驟 1：建立 Apps Script</strong>
-       <ol style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary);">
-        <li>前往 <a href="https://script.google.com" target="_blank" style="color: var(--accent);">script.google.com</a></li>
-        <li>點擊「新專案」</li>
-        <li>刪除預設代碼，貼上下方代碼</li>
-       </ol>
-      </div>
-      <div style="margin-bottom: 16px;">
-       <strong>步驟 2：複製此代碼</strong>
-       <pre id="scriptCodePre" style="background: var(--bg-primary); padding: 12px; border-radius: 8px; font-size: 11px; overflow-x: auto; white-space: pre-wrap; margin-top: 8px;"></pre>
-       <button class="submit-btn" style="margin-top: 8px;" onclick="copyScriptCode()">
-        <i class="fas fa-copy"></i> 複製代碼
-       </button>
-      </div>
-      <div style="margin-bottom: 16px;">
-       <strong>步驟 3：部署為網頁應用程式</strong>
-       <ol style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary);">
-        <li>點擊右上角「部署」→「新增部署」</li>
-        <li>類型選擇「網頁應用程式」</li>
-        <li>執行身分：「我」</li>
-        <li>誰可以存取：「所有人」</li>
-        <li>點擊「部署」</li>
-        <li>複製產生的網址</li>
-       </ol>
-      </div>
-      <div>
-       <strong>步驟 4：貼上網址</strong>
-       <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
-        將複製的網址貼到「Google Apps Script 網址」欄位，點擊「儲存並測試連接」
-       </p>
-      </div>
-     </div>
-    </div>
-   `;
+   modal.innerHTML = '<div class="modal" style="max-width: 95vw; max-height: 90vh;">' +
+    '<div class="modal-header">' +
+    '<span class="modal-title">🔥 Firebase 設定教學</span>' +
+    '<button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">' +
+    '<i class="fas fa-times"></i></button></div>' +
+    '<div class="modal-body" style="overflow-y: auto; max-height: 70vh;">' +
+    '<div style="margin-bottom: 16px;">' +
+    '<strong>步驟 1：建立 Firebase 專案</strong>' +
+    '<ol style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary);">' +
+    '<li>前往 <a href="https://console.firebase.google.com" target="_blank" style="color: var(--accent);">Firebase Console</a></li>' +
+    '<li>點擊「新增專案」，輸入名稱</li>' +
+    '<li>可以關閉 Google Analytics（非必要）</li>' +
+    '<li>等待專案建立完成</li></ol></div>' +
+    '<div style="margin-bottom: 16px;">' +
+    '<strong>步驟 2：啟用 Cloud Firestore</strong>' +
+    '<ol style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary);">' +
+    '<li>在左側選單點「Cloud Firestore」→「建立資料庫」</li>' +
+    '<li>選擇地區（建議選 asia-east1 或 asia-southeast1）</li>' +
+    '<li>選擇「以測試模式開始」</li></ol></div>' +
+    '<div style="margin-bottom: 16px;">' +
+    '<strong>步驟 3：設定安全規則（建議）</strong>' +
+    '<p style="font-size: 13px; color: var(--text-secondary); margin: 8px 0;">到 Firestore → 規則，貼上以下規則：</p>' +
+    '<pre style="background: var(--bg-primary); padding: 12px; border-radius: 8px; font-size: 11px; overflow-x: auto; white-space: pre-wrap; margin-top: 8px;">rules_version = \u00272\u0027;\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /nutrition/{docId} {\n      allow read, write: if true;\n    }\n  }\n}</pre></div>' +
+    '<div style="margin-bottom: 16px;">' +
+    '<strong>步驟 4：取得設定資訊</strong>' +
+    '<ol style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary);">' +
+    '<li>到專案設定（齒輪圖示）→ 一般</li>' +
+    '<li>向下捲動到「您的應用程式」</li>' +
+    '<li>如果沒有應用程式，點「&lt;/&gt;」新增網頁應用程式</li>' +
+    '<li>複製 <code style="background: var(--divider); padding: 2px 6px; border-radius: 4px;">projectId</code> 和 <code style="background: var(--divider); padding: 2px 6px; border-radius: 4px;">apiKey</code></li>' +
+    '<li>回到本 App 填入設定</li></ol></div>' +
+    '<div><strong>步驟 5：設定同步密鑰</strong>' +
+    '<p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">' +
+    '自訂一個同步密鑰（任意英文字串），所有裝置使用相同密鑰即可同步。密鑰就像你的資料夾名稱。</p></div>' +
+    '</div></div>';
    document.body.appendChild(modal);
-   document.getElementById('scriptCodePre').textContent = scriptCode;
-   window.currentScriptCode = scriptCode;
   }
-  function copyScriptCode() {
-   if (window.currentScriptCode) {
-    navigator.clipboard.writeText(window.currentScriptCode);
-    showToast('已複製代碼');
-   }
-  }
+
   async function showCloudSettings() {
    document.getElementById('dropdownMenu').classList.remove('show');
-   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+   document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
    document.getElementById('cloudPage').classList.add('active');
    document.getElementById('fab').style.display = 'none';
    document.getElementById('homeBtn').style.display = 'flex';
    setSheetSyncStatus('', '');
    try {
-    const url = await loadAppsScriptUrl();
-    const input = document.getElementById('appsScriptUrl');
-    if (input) input.value = url || '';
-    updateSyncModeIndicator(!!url);
-    const time = await loadLastSyncTime();
+    await loadFirebaseConfig();
+    var pIdInput = document.getElementById('firebaseProjectId');
+    var apiKeyInput = document.getElementById('firebaseApiKey');
+    var syncKeyInput = document.getElementById('firebaseSyncKey');
+    if (pIdInput) pIdInput.value = _firebaseConfig.projectId || '';
+    if (apiKeyInput) apiKeyInput.value = _firebaseConfig.apiKey || '';
+    if (syncKeyInput) syncKeyInput.value = _firebaseConfig.syncKey || '';
+    updateSyncModeIndicator(!!_firebaseConfig.projectId);
+    var time = await loadLastSyncTime();
     updateLastSyncDisplay(time);
-    const enabled = await loadAutoSyncSetting();
+    var enabled = await loadAutoSyncSetting();
     autoSyncEnabled = enabled;
-    const checkbox = document.getElementById('autoSyncCheckbox');
+    var checkbox = document.getElementById('autoSyncCheckbox');
     if (checkbox) checkbox.checked = enabled;
-   } catch (err) {
-       }
+   } catch (err) {}
   }
+
   async function autoSyncOnLoad() {
    _syncLock = true;
    try {
-    const url = await loadAppsScriptUrl();
-    if (url) {
+    if (_firebaseConfig.projectId && _firebaseConfig.apiKey && _firebaseConfig.syncKey) {
      try {
-      const response = await fetch(url);
-      if (response.ok) {
-       const result = await response.json();
-       if (result.success && result.data?.foods?.length > 0) {
-        var cloudCount = result.data.foods.length;
-        var localCount = foods.length;
-        if (cloudCount < localCount * 0.5) {
-         console.log('Auto-sync skipped: cloud has ' + cloudCount + ' items vs local ' + localCount + ', keeping local data');
-        } else {
-         // 合併雲端資料：保留本地已有的 sugar/fiber 數據
-         var cloudFoods = result.data.foods;
-         var localFoodsMap = {};
-         foods.forEach(function(f) { localFoodsMap[f.id] = f; });
-         cloudFoods.forEach(function(cf) {
-          var lf = localFoodsMap[cf.id];
-          if (lf) {
-           // 如果雲端缺少 sugar/fiber 但本地有，保留本地值
-           if (cf.per100g && lf.per100g) {
-            if ((cf.per100g.sugar === null || cf.per100g.sugar === undefined) && lf.per100g.sugar !== null && lf.per100g.sugar !== undefined) cf.per100g.sugar = lf.per100g.sugar;
-            if ((cf.per100g.fiber === null || cf.per100g.fiber === undefined) && lf.per100g.fiber !== null && lf.per100g.fiber !== undefined) cf.per100g.fiber = lf.per100g.fiber;
-           }
-           if (cf.perServing && lf.perServing) {
-            if ((cf.perServing.sugar === null || cf.perServing.sugar === undefined) && lf.perServing.sugar !== null && lf.perServing.sugar !== undefined) cf.perServing.sugar = lf.perServing.sugar;
-            if ((cf.perServing.fiber === null || cf.perServing.fiber === undefined) && lf.perServing.fiber !== null && lf.perServing.fiber !== undefined) cf.perServing.fiber = lf.perServing.fiber;
-           }
-           // 保留本地有但雲端缺的欄位
-           if (!cf.brand && lf.brand) cf.brand = lf.brand;
-           if (!cf.source && lf.source) cf.source = lf.source;
+      var data = await firebaseRead();
+      if (data && data.foods && data.foods.length > 0) {
+       var cloudCount = data.foods.length;
+       var localCount = foods.length;
+       if (cloudCount < localCount * 0.5) {
+        console.log('Auto-sync skipped: cloud has ' + cloudCount + ' items vs local ' + localCount);
+       } else {
+        // 合併雲端資料：保留本地已有的 sugar/fiber 數據
+        var localFoodsMap = {};
+        foods.forEach(function(f) { localFoodsMap[f.id] = f; });
+        data.foods.forEach(function(cf) {
+         var lf = localFoodsMap[cf.id];
+         if (lf) {
+          if (cf.per100g && lf.per100g) {
+           if ((cf.per100g.sugar === null || cf.per100g.sugar === undefined) && lf.per100g.sugar !== null && lf.per100g.sugar !== undefined) cf.per100g.sugar = lf.per100g.sugar;
+           if ((cf.per100g.fiber === null || cf.per100g.fiber === undefined) && lf.per100g.fiber !== null && lf.per100g.fiber !== undefined) cf.per100g.fiber = lf.per100g.fiber;
           }
-         });
-         foods = cloudFoods;
-         if (result.data.categories) categories = result.data.categories;
-         if (result.data.categoryEmojis) {
-          Object.keys(categoryEmojis).forEach(k => delete categoryEmojis[k]);
-          Object.assign(categoryEmojis, result.data.categoryEmojis);
+          if (cf.perServing && lf.perServing) {
+           if ((cf.perServing.sugar === null || cf.perServing.sugar === undefined) && lf.perServing.sugar !== null && lf.perServing.sugar !== undefined) cf.perServing.sugar = lf.perServing.sugar;
+           if ((cf.perServing.fiber === null || cf.perServing.fiber === undefined) && lf.perServing.fiber !== null && lf.perServing.fiber !== undefined) cf.perServing.fiber = lf.perServing.fiber;
+          }
+          if (!cf.brand && lf.brand) cf.brand = lf.brand;
+          if (!cf.source && lf.source) cf.source = lf.source;
          }
-         renderCategories();
-         renderCategoryPills();
-         renderFoodList();
-         updateStats();
-         await saveToIndexedDB();
-         await saveLastSyncTime();
-         console.log('Auto-synced from cloud:', foods.length, 'items');
+        });
+        foods = data.foods;
+        if (data.categories) categories = data.categories;
+        if (data.categoryEmojis) {
+         Object.keys(categoryEmojis).forEach(function(k){ delete categoryEmojis[k]; });
+         Object.assign(categoryEmojis, data.categoryEmojis);
         }
-        if (result.data.savedDocs && Array.isArray(result.data.savedDocs)) {
-         savedDocs = result.data.savedDocs;
-         await saveDocs();
-        }
+        renderCategories();
+        renderCategoryPills();
+        renderFoodList();
+        updateStats();
+        await saveToIndexedDB();
+        await saveLastSyncTime();
+        console.log('Auto-synced from Firebase:', foods.length, 'items');
+       }
+       if (data.savedDocs && Array.isArray(data.savedDocs)) {
+        savedDocs = data.savedDocs;
+        await saveDocs();
        }
       }
      } catch (err) {
@@ -4345,7 +3970,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     _syncLock = false;
    }
   }
-  const originalSaveToIndexedDB = saveToIndexedDB;
+
+  var originalSaveToIndexedDB = saveToIndexedDB;
   saveToIndexedDB = async function() {
    await originalSaveToIndexedDB();
    clearTimeout(window.autoUploadTimeout);
@@ -4427,268 +4053,4 @@ document.addEventListener('DOMContentLoaded', async () => {
    docSelectedFoodIds = [];
    docMode = 'per100g';
    document.getElementById('docNameInput').value = '';
-   document.getElementById('docNotesInput').value = '';
-   document.getElementById('docFoodSearch').value = '';
-   document.getElementById('docModePer100g').classList.add('active');
-   document.getElementById('docModePerServing').classList.remove('active');
-   // Reset nutrient checkboxes
-   document.querySelectorAll('#nutPicker input').forEach(function(cb){
-    var def = ['calories','protein','fat','carbs'].indexOf(cb.value) >= 0;
-    cb.checked = def;
-    cb.parentElement.classList.toggle('checked', def);
-   });
-   renderDocFoodPicker();
-   renderDocSelectedChips();
-   document.getElementById('createDocModal').classList.add('active');
-  }
-  function closeCreateDocModal() {
-   document.getElementById('createDocModal').classList.remove('active');
-  }
-  function setDocMode(m) {
-   docMode = m;
-   document.getElementById('docModePer100g').classList.toggle('active', m==='per100g');
-   document.getElementById('docModePerServing').classList.toggle('active', m==='perServing');
-  }
-  function toggleNutPick(cb) {
-   cb.parentElement.classList.toggle('checked', cb.checked);
-  }
-
-  function renderDocFoodPicker() {
-   var search = (document.getElementById('docFoodSearch').value || '').toLowerCase();
-   var list = foods.filter(function(f){
-    if (!search) return true;
-    return f.name.toLowerCase().indexOf(search)>=0 || (f.nameEn||'').toLowerCase().indexOf(search)>=0;
-   });
-   var c = document.getElementById('docFoodPicker');
-   c.innerHTML = list.slice(0, 100).map(function(f){
-    var sel = docSelectedFoodIds.indexOf(f.id) >= 0;
-    var emoji = categoryEmojis[f.category] || '';
-    return '<div class="food-picker-item'+(sel?' selected':'')+'" onclick="toggleDocFood(\''+f.id+'\')">' +
-     '<input type="checkbox" '+(sel?'checked':'')+' tabindex="-1">' +
-     '<span class="food-picker-item-name">'+(emoji?emoji+' ':'')+_esc(f.name)+'</span>' +
-     '<span class="food-picker-item-cat">'+_esc(f.category)+'</span>' +
-    '</div>';
-   }).join('');
-   if (list.length > 100) c.innerHTML += '<div style="padding:10px;text-align:center;color:var(--text-muted);font-size:12px;">顯示前100項，請用搜尋縮窄範圍</div>';
-  }
-  function filterDocFoodList() { renderDocFoodPicker(); }
-  function toggleDocFood(id) {
-   var idx = docSelectedFoodIds.indexOf(id);
-   if (idx >= 0) docSelectedFoodIds.splice(idx, 1);
-   else docSelectedFoodIds.push(id);
-   renderDocFoodPicker();
-   renderDocSelectedChips();
-  }
-  function renderDocSelectedChips() {
-   var c = document.getElementById('docSelectedFoods');
-   if (!docSelectedFoodIds.length) { c.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">尚未選擇食物</span>'; return; }
-   c.innerHTML = docSelectedFoodIds.map(function(id){
-    var f = foods.find(function(x){return x.id===id;});
-    var name = f ? f.name : '?';
-    return '<span class="doc-selected-chip">'+_esc(name)+' <button onclick="event.stopPropagation();toggleDocFood(\''+id+'\')">&times;</button></span>';
-   }).join('');
-  }
-
-  function saveDocument() {
-   var name = document.getElementById('docNameInput').value.trim();
-   if (!name) { showToast('請輸入文件名稱'); return; }
-   if (!docSelectedFoodIds.length) { showToast('請至少選擇一個食物'); return; }
-   var nutrients = [];
-   document.querySelectorAll('#nutPicker input:checked').forEach(function(cb){ nutrients.push(cb.value); });
-   if (!nutrients.length) { showToast('請至少選擇一項營養素'); return; }
-   var notes = document.getElementById('docNotesInput').value.trim();
-   if (editingDocId) {
-    var doc = savedDocs.find(function(d){return d.id===editingDocId;});
-    if (doc) {
-     doc.name = name;
-     doc.foodIds = docSelectedFoodIds.slice();
-     doc.nutrients = nutrients;
-     doc.mode = docMode;
-     doc.notes = notes;
-     doc.updatedAt = Date.now();
-    }
-   } else {
-    savedDocs.unshift({
-     id: 'doc_' + Date.now(),
-     name: name,
-     foodIds: docSelectedFoodIds.slice(),
-     nutrients: nutrients,
-     mode: docMode,
-     notes: notes,
-     createdAt: Date.now()
-    });
-   }
-   saveDocs();
-   closeCreateDocModal();
-   renderDocList();
-   showToast(editingDocId ? '文件已更新' : '文件已建立');
-  }
-
-  /* View Document */
-  var viewDocCurrentMode = 'per100g';
-
-  function viewDocument(docId) {
-   var doc = savedDocs.find(function(d){return d.id===docId;});
-   if (!doc) return;
-   viewingDocId = docId;
-   viewDocCurrentMode = doc.mode || 'per100g';
-   document.getElementById('viewDocTitle').innerHTML = '<i class="fas fa-file-alt" style="color:#3b82f6;"></i> ' + _esc(doc.name);
-   var dateStr = doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('zh-HK',{year:'numeric',month:'long',day:'numeric'}) : '';
-   document.getElementById('viewDocMeta').innerHTML =
-    '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--text-secondary);font-size:13px;">' +
-    (dateStr ? '<span><i class="fas fa-calendar"></i> ' + dateStr + '</span>' : '') +
-    '<span><i class="fas fa-utensils"></i> ' + doc.foodIds.length + ' 項食物</span>' +
-    '</div>' +
-    (doc.notes ? '<div style="margin-top:8px;font-size:13px;color:var(--text-muted);"><i class="fas fa-sticky-note"></i> ' + _esc(doc.notes) + '</div>' : '');
-
-   // Render mode toggle
-   document.getElementById('viewDocModeToggle').innerHTML =
-    '<div class="input-mode-toggle">' +
-    '<button type="button" class="input-mode-btn' + (viewDocCurrentMode==='per100g'?' active':'') + '" onclick="switchViewDocMode(\'per100g\')">每 100g</button>' +
-    '<button type="button" class="input-mode-btn' + (viewDocCurrentMode==='perServing'?' active':'') + '" onclick="switchViewDocMode(\'perServing\')">每食用份量</button>' +
-    '</div>';
-
-   renderViewDocTable();
-   document.getElementById('viewDocModal').classList.add('active');
-  }
-
-  function switchViewDocMode(mode) {
-   viewDocCurrentMode = mode;
-   var btns = document.querySelectorAll('#viewDocModeToggle .input-mode-btn');
-   btns.forEach(function(b){ b.classList.remove('active'); });
-   if (mode === 'per100g') btns[0].classList.add('active');
-   else btns[1].classList.add('active');
-   renderViewDocTable();
-  }
-
-  function renderViewDocTable() {
-   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
-   if (!doc) return;
-   var mode = viewDocCurrentMode;
-   var nuts = doc.nutrients || [];
-   var foodList = doc.foodIds.map(function(id){ return foods.find(function(x){return x.id===id;}); }).filter(Boolean);
-   var modeLabel = mode === 'per100g' ? '每 100g' : '每食用份量';
-   var html = '<table class="doc-view-table"><thead><tr><th>食物</th>';
-   nuts.forEach(function(k){
-    var m = NUT_META[k];
-    html += '<th>' + (m?m.label:k) + '<br><span style="font-weight:400;font-size:10px;opacity:0.8;">(' + (m?m.unit:'') + ')</span></th>';
-   });
-   html += '</tr></thead><tbody>';
-   var totals = {};
-   var counts = {};
-   nuts.forEach(function(k){ totals[k] = 0; counts[k] = 0; });
-   foodList.forEach(function(f){
-    var data = null;
-    if (mode === 'per100g') {
-     data = f.per100g || {};
-    } else {
-     var ps = f.perServing;
-     var p100 = f.per100g;
-     if (ps && ps.weight && p100) {
-      data = {};
-      var w = ps.weight;
-      nuts.forEach(function(k){
-       if (ps[k] !== null && ps[k] !== undefined) { data[k] = ps[k]; }
-       else if (p100[k] !== null && p100[k] !== undefined) { data[k] = Math.round(p100[k]*w/100*10)/10; }
-       else { data[k] = null; }
-      });
-      data._weight = w;
-     } else if (ps) { data = ps; }
-     else { data = {}; }
-    }
-    if (!data) data = {};
-    var emoji = categoryEmojis[f.category] || '';
-    html += '<tr><td>' + (emoji?emoji+' ':'') + _esc(f.name);
-    if (mode==='perServing' && (data._weight || (f.perServing && f.perServing.weight))) {
-     var wt = data._weight || f.perServing.weight;
-     html += '<br><span style="font-size:10px;color:var(--text-muted);">' + wt + 'g</span>';
-    }
-    html += '</td>';
-    nuts.forEach(function(k){
-     var v = data[k];
-     var display = '';
-     if (v !== null && v !== undefined) {
-      display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
-      totals[k] += display;
-      counts[k]++;
-     }
-     var m = NUT_META[k];
-     html += '<td style="color:'+(m?m.color:'inherit')+';font-weight:600;">'+display+'</td>';
-    });
-    html += '</tr>';
-   });
-   // Total / average row
-   if (foodList.length > 1) {
-    html += '<tr class="doc-total-row"><td>合計</td>';
-    nuts.forEach(function(k){
-     if (counts[k] > 0) {
-      var v = totals[k];
-      var display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
-      html += '<td>'+display+'</td>';
-     } else {
-      html += '<td></td>';
-     }
-    });
-    html += '</tr>';
-    html += '<tr class="doc-total-row" style="opacity:0.7;"><td>平均</td>';
-    nuts.forEach(function(k){
-     if (counts[k] > 0) {
-      var v = totals[k] / counts[k];
-      var display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
-      html += '<td>'+display+'</td>';
-     } else {
-      html += '<td></td>';
-     }
-    });
-    html += '</tr>';
-   }
-   html += '</tbody></table>';
-   document.getElementById('viewDocTableWrap').innerHTML = html;
-  }
-  function closeViewDocModal() {
-   document.getElementById('viewDocModal').classList.remove('active');
-   viewingDocId = null;
-  }
-  function editCurrentDoc() {
-   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
-   if (!doc) return;
-   closeViewDocModal();
-   editingDocId = doc.id;
-   docSelectedFoodIds = doc.foodIds.slice();
-   docMode = doc.mode || 'per100g';
-   document.getElementById('docNameInput').value = doc.name;
-   document.getElementById('docNotesInput').value = doc.notes || '';
-   document.getElementById('docFoodSearch').value = '';
-   document.getElementById('docModePer100g').classList.toggle('active', docMode==='per100g');
-   document.getElementById('docModePerServing').classList.toggle('active', docMode==='perServing');
-   document.querySelectorAll('#nutPicker input').forEach(function(cb){
-    var on = (doc.nutrients||[]).indexOf(cb.value) >= 0;
-    cb.checked = on;
-    cb.parentElement.classList.toggle('checked', on);
-   });
-   renderDocFoodPicker();
-   renderDocSelectedChips();
-   document.getElementById('createDocModal').classList.add('active');
-  }
-  function deleteCurrentDoc() {
-   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
-   if (!doc) return;
-   // Show confirm
-   var overlay = document.getElementById('confirmModal');
-   document.getElementById('confirmTitle').textContent = '確認刪除？';
-   document.getElementById('confirmMessage').textContent = '確定要刪除「' + doc.name + '」？此操作無法復原。';
-   var btn = document.getElementById('confirmAction');
-   btn.onclick = function(){
-    savedDocs = savedDocs.filter(function(d){return d.id!==viewingDocId;});
-    saveDocs();
-    closeConfirmModal();
-    closeViewDocModal();
-    renderDocList();
-    showToast('文件已刪除');
-   };
-   overlay.classList.add('active');
-  }
-
-</script>
-</body>
-</html>
+  ...
