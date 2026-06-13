@@ -4419,4 +4419,276 @@ document.addEventListener('DOMContentLoaded', async () => {
     '</div>';
    }).join('');
   }
-  function _esc(s){var 
+  function _esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+  /* Create / Edit Document Modal */
+  function openCreateDocModal() {
+   editingDocId = null;
+   docSelectedFoodIds = [];
+   docMode = 'per100g';
+   document.getElementById('docNameInput').value = '';
+   document.getElementById('docNotesInput').value = '';
+   document.getElementById('docFoodSearch').value = '';
+   document.getElementById('docModePer100g').classList.add('active');
+   document.getElementById('docModePerServing').classList.remove('active');
+   // Reset nutrient checkboxes
+   document.querySelectorAll('#nutPicker input').forEach(function(cb){
+    var def = ['calories','protein','fat','carbs'].indexOf(cb.value) >= 0;
+    cb.checked = def;
+    cb.parentElement.classList.toggle('checked', def);
+   });
+   renderDocFoodPicker();
+   renderDocSelectedChips();
+   document.getElementById('createDocModal').classList.add('active');
+  }
+  function closeCreateDocModal() {
+   document.getElementById('createDocModal').classList.remove('active');
+  }
+  function setDocMode(m) {
+   docMode = m;
+   document.getElementById('docModePer100g').classList.toggle('active', m==='per100g');
+   document.getElementById('docModePerServing').classList.toggle('active', m==='perServing');
+  }
+  function toggleNutPick(cb) {
+   cb.parentElement.classList.toggle('checked', cb.checked);
+  }
+
+  function renderDocFoodPicker() {
+   var search = (document.getElementById('docFoodSearch').value || '').toLowerCase();
+   var list = foods.filter(function(f){
+    if (!search) return true;
+    return f.name.toLowerCase().indexOf(search)>=0 || (f.nameEn||'').toLowerCase().indexOf(search)>=0;
+   });
+   var c = document.getElementById('docFoodPicker');
+   c.innerHTML = list.slice(0, 100).map(function(f){
+    var sel = docSelectedFoodIds.indexOf(f.id) >= 0;
+    var emoji = categoryEmojis[f.category] || '';
+    return '<div class="food-picker-item'+(sel?' selected':'')+'" onclick="toggleDocFood(\''+f.id+'\')">' +
+     '<input type="checkbox" '+(sel?'checked':'')+' tabindex="-1">' +
+     '<span class="food-picker-item-name">'+(emoji?emoji+' ':'')+_esc(f.name)+'</span>' +
+     '<span class="food-picker-item-cat">'+_esc(f.category)+'</span>' +
+    '</div>';
+   }).join('');
+   if (list.length > 100) c.innerHTML += '<div style="padding:10px;text-align:center;color:var(--text-muted);font-size:12px;">顯示前100項，請用搜尋縮窄範圍</div>';
+  }
+  function filterDocFoodList() { renderDocFoodPicker(); }
+  function toggleDocFood(id) {
+   var idx = docSelectedFoodIds.indexOf(id);
+   if (idx >= 0) docSelectedFoodIds.splice(idx, 1);
+   else docSelectedFoodIds.push(id);
+   renderDocFoodPicker();
+   renderDocSelectedChips();
+  }
+  function renderDocSelectedChips() {
+   var c = document.getElementById('docSelectedFoods');
+   if (!docSelectedFoodIds.length) { c.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">尚未選擇食物</span>'; return; }
+   c.innerHTML = docSelectedFoodIds.map(function(id){
+    var f = foods.find(function(x){return x.id===id;});
+    var name = f ? f.name : '?';
+    return '<span class="doc-selected-chip">'+_esc(name)+' <button onclick="event.stopPropagation();toggleDocFood(\''+id+'\')">&times;</button></span>';
+   }).join('');
+  }
+
+  function saveDocument() {
+   var name = document.getElementById('docNameInput').value.trim();
+   if (!name) { showToast('請輸入文件名稱'); return; }
+   if (!docSelectedFoodIds.length) { showToast('請至少選擇一個食物'); return; }
+   var nutrients = [];
+   document.querySelectorAll('#nutPicker input:checked').forEach(function(cb){ nutrients.push(cb.value); });
+   if (!nutrients.length) { showToast('請至少選擇一項營養素'); return; }
+   var notes = document.getElementById('docNotesInput').value.trim();
+   if (editingDocId) {
+    var doc = savedDocs.find(function(d){return d.id===editingDocId;});
+    if (doc) {
+     doc.name = name;
+     doc.foodIds = docSelectedFoodIds.slice();
+     doc.nutrients = nutrients;
+     doc.mode = docMode;
+     doc.notes = notes;
+     doc.updatedAt = Date.now();
+    }
+   } else {
+    savedDocs.unshift({
+     id: 'doc_' + Date.now(),
+     name: name,
+     foodIds: docSelectedFoodIds.slice(),
+     nutrients: nutrients,
+     mode: docMode,
+     notes: notes,
+     createdAt: Date.now()
+    });
+   }
+   saveDocs();
+   closeCreateDocModal();
+   renderDocList();
+   showToast(editingDocId ? '文件已更新' : '文件已建立');
+  }
+
+  /* View Document */
+  var viewDocCurrentMode = 'per100g';
+
+  function viewDocument(docId) {
+   var doc = savedDocs.find(function(d){return d.id===docId;});
+   if (!doc) return;
+   viewingDocId = docId;
+   viewDocCurrentMode = doc.mode || 'per100g';
+   document.getElementById('viewDocTitle').innerHTML = '<i class="fas fa-file-alt" style="color:#3b82f6;"></i> ' + _esc(doc.name);
+   var dateStr = doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('zh-HK',{year:'numeric',month:'long',day:'numeric'}) : '';
+   document.getElementById('viewDocMeta').innerHTML =
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--text-secondary);font-size:13px;">' +
+    (dateStr ? '<span><i class="fas fa-calendar"></i> ' + dateStr + '</span>' : '') +
+    '<span><i class="fas fa-utensils"></i> ' + doc.foodIds.length + ' 項食物</span>' +
+    '</div>' +
+    (doc.notes ? '<div style="margin-top:8px;font-size:13px;color:var(--text-muted);"><i class="fas fa-sticky-note"></i> ' + _esc(doc.notes) + '</div>' : '');
+
+   // Render mode toggle
+   document.getElementById('viewDocModeToggle').innerHTML =
+    '<div class="input-mode-toggle">' +
+    '<button type="button" class="input-mode-btn' + (viewDocCurrentMode==='per100g'?' active':'') + '" onclick="switchViewDocMode(\'per100g\')">每 100g</button>' +
+    '<button type="button" class="input-mode-btn' + (viewDocCurrentMode==='perServing'?' active':'') + '" onclick="switchViewDocMode(\'perServing\')">每食用份量</button>' +
+    '</div>';
+
+   renderViewDocTable();
+   document.getElementById('viewDocModal').classList.add('active');
+  }
+
+  function switchViewDocMode(mode) {
+   viewDocCurrentMode = mode;
+   var btns = document.querySelectorAll('#viewDocModeToggle .input-mode-btn');
+   btns.forEach(function(b){ b.classList.remove('active'); });
+   if (mode === 'per100g') btns[0].classList.add('active');
+   else btns[1].classList.add('active');
+   renderViewDocTable();
+  }
+
+  function renderViewDocTable() {
+   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
+   if (!doc) return;
+   var mode = viewDocCurrentMode;
+   var nuts = doc.nutrients || [];
+   var foodList = doc.foodIds.map(function(id){ return foods.find(function(x){return x.id===id;}); }).filter(Boolean);
+   var modeLabel = mode === 'per100g' ? '每 100g' : '每食用份量';
+   var html = '<table class="doc-view-table"><thead><tr><th>食物</th>';
+   nuts.forEach(function(k){
+    var m = NUT_META[k];
+    html += '<th>' + (m?m.label:k) + '<br><span style="font-weight:400;font-size:10px;opacity:0.8;">(' + (m?m.unit:'') + ')</span></th>';
+   });
+   html += '</tr></thead><tbody>';
+   var totals = {};
+   var counts = {};
+   nuts.forEach(function(k){ totals[k] = 0; counts[k] = 0; });
+   foodList.forEach(function(f){
+    var data = null;
+    if (mode === 'per100g') {
+     data = f.per100g || {};
+    } else {
+     var ps = f.perServing;
+     var p100 = f.per100g;
+     if (ps && ps.weight && p100) {
+      data = {};
+      var w = ps.weight;
+      nuts.forEach(function(k){
+       if (ps[k] !== null && ps[k] !== undefined) { data[k] = ps[k]; }
+       else if (p100[k] !== null && p100[k] !== undefined) { data[k] = Math.round(p100[k]*w/100*10)/10; }
+       else { data[k] = null; }
+      });
+      data._weight = w;
+     } else if (ps) { data = ps; }
+     else { data = {}; }
+    }
+    if (!data) data = {};
+    var emoji = categoryEmojis[f.category] || '';
+    html += '<tr><td>' + (emoji?emoji+' ':'') + _esc(f.name);
+    if (mode==='perServing' && (data._weight || (f.perServing && f.perServing.weight))) {
+     var wt = data._weight || f.perServing.weight;
+     html += '<br><span style="font-size:10px;color:var(--text-muted);">' + wt + 'g</span>';
+    }
+    html += '</td>';
+    nuts.forEach(function(k){
+     var v = data[k];
+     var display = '';
+     if (v !== null && v !== undefined) {
+      display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
+      totals[k] += display;
+      counts[k]++;
+     }
+     var m = NUT_META[k];
+     html += '<td style="color:'+(m?m.color:'inherit')+';font-weight:600;">'+display+'</td>';
+    });
+    html += '</tr>';
+   });
+   // Total / average row
+   if (foodList.length > 1) {
+    html += '<tr class="doc-total-row"><td>合計</td>';
+    nuts.forEach(function(k){
+     if (counts[k] > 0) {
+      var v = totals[k];
+      var display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
+      html += '<td>'+display+'</td>';
+     } else {
+      html += '<td></td>';
+     }
+    });
+    html += '</tr>';
+    html += '<tr class="doc-total-row" style="opacity:0.7;"><td>平均</td>';
+    nuts.forEach(function(k){
+     if (counts[k] > 0) {
+      var v = totals[k] / counts[k];
+      var display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
+      html += '<td>'+display+'</td>';
+     } else {
+      html += '<td></td>';
+     }
+    });
+    html += '</tr>';
+   }
+   html += '</tbody></table>';
+   document.getElementById('viewDocTableWrap').innerHTML = html;
+  }
+  function closeViewDocModal() {
+   document.getElementById('viewDocModal').classList.remove('active');
+   viewingDocId = null;
+  }
+  function editCurrentDoc() {
+   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
+   if (!doc) return;
+   closeViewDocModal();
+   editingDocId = doc.id;
+   docSelectedFoodIds = doc.foodIds.slice();
+   docMode = doc.mode || 'per100g';
+   document.getElementById('docNameInput').value = doc.name;
+   document.getElementById('docNotesInput').value = doc.notes || '';
+   document.getElementById('docFoodSearch').value = '';
+   document.getElementById('docModePer100g').classList.toggle('active', docMode==='per100g');
+   document.getElementById('docModePerServing').classList.toggle('active', docMode==='perServing');
+   document.querySelectorAll('#nutPicker input').forEach(function(cb){
+    var on = (doc.nutrients||[]).indexOf(cb.value) >= 0;
+    cb.checked = on;
+    cb.parentElement.classList.toggle('checked', on);
+   });
+   renderDocFoodPicker();
+   renderDocSelectedChips();
+   document.getElementById('createDocModal').classList.add('active');
+  }
+  function deleteCurrentDoc() {
+   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
+   if (!doc) return;
+   // Show confirm
+   var overlay = document.getElementById('confirmModal');
+   document.getElementById('confirmTitle').textContent = '確認刪除？';
+   document.getElementById('confirmMessage').textContent = '確定要刪除「' + doc.name + '」？此操作無法復原。';
+   var btn = document.getElementById('confirmAction');
+   btn.onclick = function(){
+    savedDocs = savedDocs.filter(function(d){return d.id!==viewingDocId;});
+    saveDocs();
+    closeConfirmModal();
+    closeViewDocModal();
+    renderDocList();
+    showToast('文件已刪除');
+   };
+   overlay.classList.add('active');
+  }
+
+</script>
+</body>
+</html>
