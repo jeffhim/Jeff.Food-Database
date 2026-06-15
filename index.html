@@ -337,77 +337,114 @@ to{transform:rotate(360deg);}
 <i class="fas fa-cloud" style="color: #F57C00;"></i>
 Firebase 雲端同步
 </div>
+<div id="loginForm">
 <div class="cloud-help" style="margin-bottom: 16px;">
-<strong>🔥 Firebase 即時同步：</strong><br><br>
-<i class="fas fa-check-circle" style="color: #22c55e;"></i> 在 App 新增/修改資料 → 自動上傳<br>
-<i class="fas fa-check-circle" style="color: #22c55e;"></i> 開啟 App → 自動下載最新資料<br>
-<i class="fas fa-check-circle" style="color: #22c55e;"></i> 多裝置同步<br>
-<i class="fas fa-check-circle" style="color: #22c55e;"></i> 比 Google Apps Script 快好多
+<strong>🔐 登入以同步你的營養資料</strong><br><br>
+首次使用請先點「註冊」建立帳號
 </div>
-<div id="sheetSyncStatus" class="cloud-status" style="display: none;"></div>
-<div id="lastSyncInfo" style="padding: 12px; background: var(--bg-primary); border-radius: 10px; margin-bottom: 16px;">
-<div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px;">
+<div class="form-group">
+<label class="form-label">電郵地址</label>
+<input type="email" class="form-input" id="authEmail" placeholder="your@email.com" autocomplete="email">
+</div>
+<div class="form-group">
+<label class="form-label">密碼（最少 6 個字元）</label>
+<input type="password" class="form-input" id="authPassword" placeholder="輸入密碼" autocomplete="current-password">
+</div>
+<div id="authError" style="display:none; color:#ef4444; font-size:13px; margin-bottom:12px; padding:10px; background:rgba(239,68,68,0.1); border-radius:8px;"></div>
+<div style="display:flex; gap:8px; margin-bottom:16px;">
+<button class="submit-btn" style="flex:1;" onclick="handleSignIn()">
+<i class="fas fa-sign-in-alt"></i> 登入
+</button>
+<button class="submit-btn" style="flex:1; background:#8b5cf6;" onclick="handleSignUp()">
+<i class="fas fa-user-plus"></i> 註冊
+</button>
+</div>
+</div>
+<div id="loggedInInfo" style="display:none;">
+<div style="padding:12px; background:rgba(34,197,94,0.1); border-radius:10px; margin-bottom:12px;">
+<div style="display:flex; align-items:center; gap:8px; color:#22c55e; font-weight:600; font-size:14px; margin-bottom:6px;">
+<i class="fas fa-check-circle"></i> 已登入
+</div>
+<div style="font-size:13px; color:var(--text-secondary);">
+<i class="fas fa-envelope" style="width:16px;"></i> <span id="authUserEmail"></span>
+</div>
+<div style="font-size:11px; color:var(--text-muted); margin-top:4px; word-break:break-all;">
+UID: <code id="authUserUid" style="background:var(--bg-primary); padding:2px 6px; border-radius:4px; font-size:10px;"></code>
+<button onclick="navigator.clipboard.writeText(document.getElementById('authUserUid').textContent); showToast('已複製 UID')" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:11px; padding:2px 4px;">複製</button>
+</div>
+</div>
+<button class="submit-btn" style="background:var(--text-secondary); margin-bottom:16px;" onclick="handleLogout()">
+<i class="fas fa-sign-out-alt"></i> 登出
+</button>
+</div>
+<div id="syncControls" style="display:none;">
+<div id="sheetSyncStatus" class="cloud-status" style="display:none;"></div>
+<div id="lastSyncInfo" style="padding:12px; background:var(--bg-primary); border-radius:10px; margin-bottom:16px;">
+<div style="display:flex; align-items:center; gap:8px; color:var(--text-secondary); font-size:13px;">
 <i class="fas fa-clock"></i>
 <span>上次同步：<span id="lastSyncTime">從未</span></span>
 </div>
-<div id="syncModeIndicator" style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; margin-top: 6px;">
-<i class="fas fa-info-circle"></i>
-<span>尚未設定 Firebase 同步</span>
+<div id="syncModeIndicator" style="display:flex; align-items:center; gap:8px; color:var(--text-secondary); font-size:13px; margin-top:6px;">
+<i class="fas fa-check-circle" style="color:#22c55e;"></i>
+<span style="color:#22c55e;">已連接 Firebase</span>
 </div>
 </div>
-<div style="display: flex; gap: 8px; margin-bottom: 16px;">
-<button class="submit-btn" style="flex: 1;" onclick="syncFromCloud()" id="cloudDownloadBtn">
+<div class="form-group">
+<label class="form-label">同步密鑰（所有裝置用相同密鑰即可同步）</label>
+<div style="display:flex; gap:8px;">
+<input type="text" class="form-input" id="firebaseSyncKey" value="main" style="flex:1;">
+<button class="submit-btn" style="width:auto; padding:0 20px;" onclick="saveSyncKey()">
+<i class="fas fa-save"></i>
+</button>
+</div>
+</div>
+<div style="display:flex; gap:8px; margin-bottom:16px;">
+<button class="submit-btn" style="flex:1;" onclick="syncFromCloud()" id="cloudDownloadBtn">
 <i class="fas fa-cloud-download-alt"></i> 下載
 </button>
-<button class="submit-btn" style="flex: 1; background: #34a853;" onclick="syncToCloud()" id="cloudUploadBtn">
+<button class="submit-btn" style="flex:1; background:#34a853;" onclick="syncToCloud()" id="cloudUploadBtn">
 <i class="fas fa-cloud-upload-alt"></i> 上傳
 </button>
 </div>
-<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--divider);">
-<div class="form-section-title"><i class="fas fa-cog" style="color: #F57C00;"></i> Firebase 設定</div>
-<div class="cloud-help" style="margin-bottom: 12px; font-size: 12px;">
-<strong>一次性設定步驟：</strong><br>
-1. <a href="#" onclick="showFirebaseSetup(); return false;" style="color: var(--accent);">點此查看詳細教學</a><br>
-2. 到 Firebase Console 建立專案及 Firestore<br>
-3. 將 Project ID 和 API Key 貼到下方<br>
-4. 輸入一個同步密鑰（用於多裝置同步）
-</div>
-<div class="form-group">
-<label class="form-label">Firebase Project ID</label>
-<input type="text" class="form-input" id="firebaseProjectId" placeholder="例：my-nutrition-app-12345">
-</div>
-<div class="form-group">
-<label class="form-label">Firebase API Key</label>
-<input type="text" class="form-input" id="firebaseApiKey" placeholder="例：AIzaSy...">
-</div>
-<div class="form-group">
-<label class="form-label">同步密鑰（自訂，用於識別你的資料）</label>
-<input type="text" class="form-input" id="firebaseSyncKey" placeholder="例：my-nutrition-data">
-</div>
-<button class="submit-btn" style="background: #F57C00;" onclick="saveFirebaseConfig()">
-<i class="fas fa-save"></i> 儲存並測試連接
-</button>
-<div style="margin-top: 12px;">
-<label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); cursor: pointer;">
-<input type="checkbox" id="autoSyncCheckbox" onchange="toggleAutoSync()" style="width: 18px; height: 18px;">
+<label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary); cursor:pointer;">
+<input type="checkbox" id="autoSyncCheckbox" onchange="toggleAutoSync()" style="width:18px; height:18px;">
 自動同步（每次修改後自動上傳）
 </label>
 </div>
+<div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--divider);">
+<div class="form-section-title"><i class="fas fa-shield-alt" style="color:#F57C00;"></i> 安全規則設定</div>
+<div class="cloud-help" style="font-size:12px;">
+<strong>🔒 鎖定只限你使用：</strong><br><br>
+1. 到 <a href="https://console.firebase.google.com" target="_blank" style="color:var(--accent);">Firebase Console</a> → Firestore → 規則<br>
+2. 登入後複製上方的 <strong>UID</strong><br>
+3. 將規則改為：<br>
+<pre style="background:var(--bg-primary); padding:8px; border-radius:6px; font-size:10px; margin-top:6px; overflow-x:auto; white-space:pre-wrap;">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /nutrition/{docId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == '你的UID';
+    }
+  }
+}</pre>
+4. 將 <code style="background:var(--divider); padding:2px 4px; border-radius:4px; font-size:10px;">'你的UID'</code> 替換為你的 UID<br>
+5. 點「發布」
 </div>
-<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--divider);">
+</div>
+<div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--divider);">
 <div class="form-section-title"><i class="fas fa-database"></i> 本機資料管理</div>
-<button class="submit-btn" style="background: #f59e0b; margin-bottom: 8px;" onclick="resetToDefault()">
+<button class="submit-btn" style="background:#f59e0b; margin-bottom:8px;" onclick="resetToDefault()">
 <i class="fas fa-undo"></i> 重置為預設資料
 </button>
-<button class="submit-btn" style="background: #8b5cf6; margin-bottom: 8px;" onclick="exportLocalData()">
+<button class="submit-btn" style="background:#8b5cf6; margin-bottom:8px;" onclick="exportLocalData()">
 <i class="fas fa-download"></i> 匯出本機資料 (JSON)
 </button>
-<button class="submit-btn" style="background: #06b6d4;" onclick="exportToCSV()">
+<button class="submit-btn" style="background:#06b6d4;" onclick="exportToCSV()">
 <i class="fas fa-file-csv"></i> 匯出為 CSV
 </button>
 </div>
 </div>
-<div style="margin-top: 20px;">
+<div style="margin-top:20px;">
 <button class="submit-btn" onclick="backToHome()">
 <i class="fas fa-arrow-left"></i> 返回主頁
 </button>
@@ -876,7 +913,8 @@ function openDatabase() {
   let showPer100gSet = new Set();
   let formInputMode = 'per100g';
   let aiImportInputMode = 'per100g';
-  let _firebaseConfig = { projectId: '', apiKey: '', syncKey: '' };
+  let _firebaseConfig = { projectId: 'food-74496', apiKey: 'AIzaSyA9pC28vVMJenm72njXypSVtH9pdmOBhh4', syncKey: 'main' };
+  let _authState = { idToken: null, refreshToken: null, uid: null, email: null, expiresAt: 0 };
   const N=null;
 const _F=function(d){return d.map(function(r){
 var f={id:r[0],name:r[1],nameEn:r[2],category:r[3],source:r[6]||null,brand:r[7]||null};
@@ -1295,6 +1333,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadFromIndexedDB();
     await loadDocs();
     await loadFirebaseConfig();
+    await loadAuthFromDB();
+    if (_authState.refreshToken) { try { await refreshAuthToken(); } catch(e) { console.log('Auto-login skipped'); } }
     const savedAutoSync = await loadAutoSyncSetting();
     autoSyncEnabled = savedAutoSync;
     setTimeout(autoSyncOnLoad, 1000);
@@ -2313,7 +2353,9 @@ document.addEventListener('DOMContentLoaded', async () => {
    doAutoSync();
   }
   async function doAutoSync() {
-   if (!_firebaseConfig.projectId || !_firebaseConfig.apiKey || !_firebaseConfig.syncKey) return;
+   if (!_firebaseConfig.projectId || !_firebaseConfig.syncKey) return;
+   var token = await getValidAuthToken();
+   if (!token) return;
    showToast('正在同步...');
    try {
     await firebaseWrite({
@@ -3513,93 +3555,267 @@ document.addEventListener('DOMContentLoaded', async () => {
   let autoSyncEnabled = false;
   let _syncLock = false;
 
-  /* ===== Firebase Firestore REST API ===== */
+  /* ===== Firebase Firestore REST API + Auth ===== */
+  var AUTH_BASE = 'https://identitytoolkit.googleapis.com/v1/accounts';
+  var TOKEN_BASE = 'https://securetoken.googleapis.com/v1/token';
+
   function _fbUrl() {
-   return 'https://firestore.googleapis.com/v1/projects/' + _firebaseConfig.projectId + '/databases/(default)/documents/nutrition/' + _firebaseConfig.syncKey + '?key=' + _firebaseConfig.apiKey;
+   return 'https://firestore.googleapis.com/v1/projects/' + _firebaseConfig.projectId + '/databases/(default)/documents/nutrition/' + _firebaseConfig.syncKey;
   }
 
   async function firebaseWrite(data) {
-   const body = { fields: { data: { stringValue: JSON.stringify(data) }, lastUpdated: { stringValue: new Date().toISOString() } } };
-   const res = await fetch(_fbUrl(), {
+   var token = await getValidAuthToken();
+   if (!token) throw new Error('請先登入');
+   var body = { fields: { data: { stringValue: JSON.stringify(data) }, lastUpdated: { stringValue: new Date().toISOString() } } };
+   var res = await fetch(_fbUrl(), {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
     body: JSON.stringify(body)
    });
    if (!res.ok) {
-    const err = await res.json().catch(function(){return {};});
-    throw new Error(err.error?.message || '上傳失敗 (' + res.status + ')');
+    var err = await res.json().catch(function(){return {};});
+    throw new Error((err.error && err.error.message) || ('上傳失敗 (' + res.status + ')'));
    }
    return res.json();
   }
 
   async function firebaseRead() {
-   const res = await fetch(_fbUrl());
-   if (res.status === 404) return null; // Document doesn't exist yet
+   var token = await getValidAuthToken();
+   if (!token) throw new Error('請先登入');
+   var res = await fetch(_fbUrl(), {
+    headers: { 'Authorization': 'Bearer ' + token }
+   });
+   if (res.status === 404) return null;
    if (!res.ok) {
-    const err = await res.json().catch(function(){return {};});
-    throw new Error(err.error?.message || '下載失敗 (' + res.status + ')');
+    var err = await res.json().catch(function(){return {};});
+    throw new Error((err.error && err.error.message) || ('下載失敗 (' + res.status + ')'));
    }
-   const doc = await res.json();
+   var doc = await res.json();
    if (doc.fields && doc.fields.data && doc.fields.data.stringValue) {
     return JSON.parse(doc.fields.data.stringValue);
    }
    return null;
   }
 
-  async function loadFirebaseConfig() {
-   if (!db) return;
-   try {
-    const tx = db.transaction(['settings'], 'readonly');
-    const store = tx.objectStore('settings');
-    const r = await new Promise(function(resolve) {
-     var req = store.get('firebaseConfig');
-     req.onsuccess = function() { resolve(req.result); };
-     req.onerror = function() { resolve(null); };
-    });
-    if (r && r.value) {
-     _firebaseConfig = r.value;
-    }
-   } catch (e) {}
+  /* --- Firebase Auth --- */
+  async function firebaseSignIn(email, password) {
+   var res = await fetch(AUTH_BASE + ':signInWithPassword?key=' + _firebaseConfig.apiKey, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, password: password, returnSecureToken: true })
+   });
+   var data = await res.json();
+   if (data.error) throw new Error(data.error.message);
+   _authState = {
+    idToken: data.idToken,
+    refreshToken: data.refreshToken,
+    uid: data.localId,
+    email: data.email,
+    expiresAt: Date.now() + parseInt(data.expiresIn) * 1000
+   };
+   await saveAuthToDB();
+   return _authState;
   }
 
-  async function saveFirebaseConfigToDB(config) {
-   _firebaseConfig = config;
-   if (!db) { memorySettings.firebaseConfig = config; return; }
+  async function firebaseSignUp(email, password) {
+   var res = await fetch(AUTH_BASE + ':signUp?key=' + _firebaseConfig.apiKey, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, password: password, returnSecureToken: true })
+   });
+   var data = await res.json();
+   if (data.error) throw new Error(data.error.message);
+   _authState = {
+    idToken: data.idToken,
+    refreshToken: data.refreshToken,
+    uid: data.localId,
+    email: data.email,
+    expiresAt: Date.now() + parseInt(data.expiresIn) * 1000
+   };
+   await saveAuthToDB();
+   return _authState;
+  }
+
+  async function refreshAuthToken() {
+   if (!_authState.refreshToken) throw new Error('No refresh token');
+   var res = await fetch(TOKEN_BASE + '?key=' + _firebaseConfig.apiKey, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(_authState.refreshToken)
+   });
+   var data = await res.json();
+   if (data.error) throw new Error((data.error && data.error.message) || 'Token refresh failed');
+   _authState.idToken = data.id_token;
+   _authState.refreshToken = data.refresh_token;
+   _authState.uid = data.user_id;
+   _authState.expiresAt = Date.now() + parseInt(data.expires_in) * 1000;
+   await saveAuthToDB();
+  }
+
+  async function getValidAuthToken() {
+   if (!_authState.refreshToken) return null;
+   if (_authState.idToken && Date.now() < _authState.expiresAt - 60000) {
+    return _authState.idToken;
+   }
    try {
-    const tx = db.transaction(['settings'], 'readwrite');
-    const store = tx.objectStore('settings');
+    await refreshAuthToken();
+    return _authState.idToken;
+   } catch (e) {
+    _authState = { idToken: null, refreshToken: null, uid: null, email: null, expiresAt: 0 };
+    await saveAuthToDB();
+    return null;
+   }
+  }
+
+  async function saveAuthToDB() {
+   if (!db) return;
+   try {
+    var tx = db.transaction(['settings'], 'readwrite');
+    var store = tx.objectStore('settings');
     await new Promise(function(resolve, reject) {
-     var req = store.put({ key: 'firebaseConfig', value: config });
+     var req = store.put({ key: 'firebaseAuth', value: {
+      refreshToken: _authState.refreshToken,
+      uid: _authState.uid,
+      email: _authState.email
+     }});
      req.onsuccess = resolve;
      req.onerror = reject;
     });
    } catch (e) {}
   }
 
-  async function saveFirebaseConfig() {
-   var projectId = document.getElementById('firebaseProjectId').value.trim();
-   var apiKey = document.getElementById('firebaseApiKey').value.trim();
-   var syncKey = document.getElementById('firebaseSyncKey').value.trim();
-   if (!projectId || !apiKey || !syncKey) {
-    showToast('請填寫所有欄位');
-    return;
-   }
-   setSheetSyncStatus('<i class="fas fa-spinner fa-spin"></i> 正在測試連接...', '');
-   var config = { projectId: projectId, apiKey: apiKey, syncKey: syncKey };
+  async function loadAuthFromDB() {
+   if (!db) return;
    try {
-    // Test connection by trying to read
-    _firebaseConfig = config;
-    var data = await firebaseRead();
-    await saveFirebaseConfigToDB(config);
-    var count = (data && data.foods) ? data.foods.length : 0;
-    setSheetSyncStatus('<i class="fas fa-check-circle"></i> 連接成功！' + (count > 0 ? '雲端有 ' + count + ' 款食物' : '雲端暫無資料'), 'success');
-    showToast('Firebase 設定已儲存！');
-    updateSyncModeIndicator(true);
-   } catch (err) {
-    setSheetSyncStatus('<i class="fas fa-exclamation-circle"></i> ' + err.message, 'error');
-    showToast('連接失敗：' + err.message);
-    _firebaseConfig = { projectId: '', apiKey: '', syncKey: '' };
+    var tx = db.transaction(['settings'], 'readonly');
+    var store = tx.objectStore('settings');
+    var r = await new Promise(function(resolve) {
+     var req = store.get('firebaseAuth');
+     req.onsuccess = function() { resolve(req.result); };
+     req.onerror = function() { resolve(null); };
+    });
+    if (r && r.value) {
+     _authState.refreshToken = r.value.refreshToken || null;
+     _authState.uid = r.value.uid || null;
+     _authState.email = r.value.email || null;
+    }
+   } catch (e) {}
+  }
+
+  /* --- Auth UI Handlers --- */
+  async function handleSignIn() {
+   var email = document.getElementById('authEmail').value.trim();
+   var password = document.getElementById('authPassword').value;
+   if (!email || !password) { showAuthError('請輸入電郵和密碼'); return; }
+   showAuthError('');
+   try {
+    document.querySelectorAll('#loginForm .submit-btn').forEach(function(b){b.disabled=true;});
+    await firebaseSignIn(email, password);
+    showToast('登入成功！');
+    updateAuthUI();
+   } catch (e) {
+    showAuthError(translateAuthError(e.message));
+   } finally {
+    document.querySelectorAll('#loginForm .submit-btn').forEach(function(b){b.disabled=false;});
    }
+  }
+
+  async function handleSignUp() {
+   var email = document.getElementById('authEmail').value.trim();
+   var password = document.getElementById('authPassword').value;
+   if (!email || !password) { showAuthError('請輸入電郵和密碼'); return; }
+   if (password.length < 6) { showAuthError('密碼最少 6 個字元'); return; }
+   showAuthError('');
+   try {
+    document.querySelectorAll('#loginForm .submit-btn').forEach(function(b){b.disabled=true;});
+    await firebaseSignUp(email, password);
+    showToast('註冊並登入成功！');
+    updateAuthUI();
+   } catch (e) {
+    showAuthError(translateAuthError(e.message));
+   } finally {
+    document.querySelectorAll('#loginForm .submit-btn').forEach(function(b){b.disabled=false;});
+   }
+  }
+
+  async function handleLogout() {
+   _authState = { idToken: null, refreshToken: null, uid: null, email: null, expiresAt: 0 };
+   await saveAuthToDB();
+   showToast('已登出');
+   updateAuthUI();
+  }
+
+  function showAuthError(msg) {
+   var el = document.getElementById('authError');
+   if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
+  }
+
+  function translateAuthError(msg) {
+   var map = {
+    'EMAIL_NOT_FOUND': '此電郵未註冊',
+    'INVALID_PASSWORD': '密碼錯誤',
+    'EMAIL_EXISTS': '此電郵已被註冊',
+    'INVALID_LOGIN_CREDENTIALS': '電郵或密碼錯誤',
+    'TOO_MANY_ATTEMPTS_TRY_LATER': '嘗試次數過多，請稍後再試',
+    'WEAK_PASSWORD : Password should be at least 6 characters': '密碼最少 6 個字元',
+    'INVALID_EMAIL': '電郵格式不正確',
+    'MISSING_PASSWORD': '請輸入密碼'
+   };
+   return map[msg] || msg;
+  }
+
+  function updateAuthUI() {
+   var loginForm = document.getElementById('loginForm');
+   var loggedInInfo = document.getElementById('loggedInInfo');
+   var syncControls = document.getElementById('syncControls');
+   var isLoggedIn = !!_authState.uid;
+   if (loginForm) loginForm.style.display = isLoggedIn ? 'none' : 'block';
+   if (loggedInInfo) loggedInInfo.style.display = isLoggedIn ? 'block' : 'none';
+   if (syncControls) syncControls.style.display = isLoggedIn ? 'block' : 'none';
+   if (isLoggedIn) {
+    var emailEl = document.getElementById('authUserEmail');
+    var uidEl = document.getElementById('authUserUid');
+    if (emailEl) emailEl.textContent = _authState.email || '';
+    if (uidEl) uidEl.textContent = _authState.uid || '';
+   }
+  }
+
+  /* --- Firebase Config (sync key only, rest is hardcoded) --- */
+  async function loadFirebaseConfig() {
+   if (!db) return;
+   try {
+    var tx = db.transaction(['settings'], 'readonly');
+    var store = tx.objectStore('settings');
+    var r = await new Promise(function(resolve) {
+     var req = store.get('firebaseConfig');
+     req.onsuccess = function() { resolve(req.result); };
+     req.onerror = function() { resolve(null); };
+    });
+    if (r && r.value && r.value.syncKey) {
+     _firebaseConfig.syncKey = r.value.syncKey;
+    }
+   } catch (e) {}
+  }
+
+  async function saveFirebaseConfigToDB() {
+   if (!db) return;
+   try {
+    var tx = db.transaction(['settings'], 'readwrite');
+    var store = tx.objectStore('settings');
+    await new Promise(function(resolve, reject) {
+     var req = store.put({ key: 'firebaseConfig', value: { syncKey: _firebaseConfig.syncKey } });
+     req.onsuccess = resolve;
+     req.onerror = reject;
+    });
+   } catch (e) {}
+  }
+
+  async function saveSyncKey() {
+   var key = document.getElementById('firebaseSyncKey').value.trim();
+   if (!key) { showToast('請輸入同步密鑰'); return; }
+   _firebaseConfig.syncKey = key;
+   await saveFirebaseConfigToDB();
+   showToast('同步密鑰已儲存');
   }
 
   function updateSyncModeIndicator(connected) {
@@ -3637,9 +3853,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      req.onerror = reject;
     });
     return result ? result.value : null;
-   } catch (err) {
-    return null;
-   }
+   } catch (err) { return null; }
   }
 
   async function saveLastSyncTime() {
@@ -3694,98 +3908,71 @@ document.addEventListener('DOMContentLoaded', async () => {
      req.onsuccess = function() { resolve(req.result ? req.result.value : false); };
      req.onerror = function() { resolve(false); };
     });
-   } catch (err) {
-    return false;
-   }
+   } catch (err) { return false; }
   }
 
   async function syncToCloud() {
-   if (!_firebaseConfig.projectId || !_firebaseConfig.apiKey || !_firebaseConfig.syncKey) {
-    showToast('請先設定 Firebase');
-    return;
-   }
+   var token = await getValidAuthToken();
+   if (!token) { showToast('請先登入'); return; }
+   if (!_firebaseConfig.syncKey) { showToast('請先設定同步密鑰'); return; }
    var btn = document.getElementById('cloudUploadBtn');
-   if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上傳中...';
-   }
+   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上傳中...'; }
    setSheetSyncStatus('<i class="fas fa-spinner fa-spin"></i> 正在上傳到 Firebase...', '');
    try {
-    var dataToSend = {
-     foods: foods,
-     categories: categories,
-     categoryEmojis: categoryEmojis,
-     savedDocs: savedDocs,
-     lastUpdated: new Date().toISOString()
-    };
-    await firebaseWrite(dataToSend);
-    // Verify by reading back
+    await firebaseWrite({
+     foods: foods, categories: categories, categoryEmojis: categoryEmojis,
+     savedDocs: savedDocs, lastUpdated: new Date().toISOString()
+    });
     var verifyData = await firebaseRead();
     var cloudCount = (verifyData && verifyData.foods) ? verifyData.foods.length : 0;
     await saveLastSyncTime();
     if (cloudCount === foods.length) {
      setSheetSyncStatus('<i class="fas fa-check-circle"></i> 上傳成功！雲端共 ' + cloudCount + ' 款食物（已驗證）', 'success');
      showToast('已上傳到 Firebase ✓ ' + cloudCount + ' 款食物');
-    } else if (cloudCount > 0) {
-     setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 上傳可能未完成：雲端 ' + cloudCount + ' 款 / 本地 ' + foods.length + ' 款', 'error');
-     showToast('⚠️ 雲端只有 ' + cloudCount + ' 款，請重試');
     } else {
      setSheetSyncStatus('<i class="fas fa-check-circle"></i> 已上傳（共送出 ' + foods.length + ' 款）', 'success');
      showToast('已上傳到 Firebase');
     }
    } catch (err) {
-    console.error('Upload error:', err);
     setSheetSyncStatus('<i class="fas fa-exclamation-circle"></i> 上傳失敗：' + err.message, 'error');
     showToast('上傳失敗：' + err.message);
    } finally {
-    if (btn) {
-     btn.disabled = false;
-     btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> 上傳';
-    }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> 上傳'; }
    }
   }
 
   async function syncFromCloud() {
-   if (!_firebaseConfig.projectId || !_firebaseConfig.apiKey || !_firebaseConfig.syncKey) {
-    showToast('請先設定 Firebase');
-    return;
-   }
+   var token = await getValidAuthToken();
+   if (!token) { showToast('請先登入'); return; }
+   if (!_firebaseConfig.syncKey) { showToast('請先設定同步密鑰'); return; }
    var btn = document.getElementById('cloudDownloadBtn');
-   if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 下載中...';
-   }
+   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 下載中...'; }
    setSheetSyncStatus('<i class="fas fa-spinner fa-spin"></i> 正在從 Firebase 下載...', '');
    try {
     var data = await firebaseRead();
     if (!data) {
      setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 雲端沒有資料', 'error');
-     showToast('雲端暫無資料');
-     return;
+     showToast('雲端暫無資料'); return;
     }
     var cloudFoodCount = (data.foods && Array.isArray(data.foods)) ? data.foods.length : 0;
     var localFoodCount = foods.length;
     if (cloudFoodCount > 0 && cloudFoodCount < localFoodCount * 0.5) {
-     setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 雲端只有 ' + cloudFoodCount + ' 款，本地有 ' + localFoodCount + ' 款。已阻止下載以保護本地資料。請先上傳恢復雲端。', 'error');
-     showToast('⚠️ 雲端資料異常（' + cloudFoodCount + ' 款），已阻止覆蓋');
-     if (data.savedDocs && Array.isArray(data.savedDocs)) {
-      savedDocs = data.savedDocs;
-      saveDocs();
-     }
+     setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 雲端只有 ' + cloudFoodCount + ' 款，本地有 ' + localFoodCount + ' 款。已阻止下載以保護本地資料。', 'error');
+     showToast('⚠️ 雲端資料異常，已阻止覆蓋');
+     if (data.savedDocs && Array.isArray(data.savedDocs)) { savedDocs = data.savedDocs; saveDocs(); }
     } else if (cloudFoodCount > 0) {
-     // 合併：保留本地已有的 sugar/fiber/brand/source
      var localMap = {};
      foods.forEach(function(f) { localMap[f.id] = f; });
      data.foods.forEach(function(cf) {
       var lf = localMap[cf.id];
       if (lf) {
        if (cf.per100g && lf.per100g) {
-        if ((cf.per100g.sugar === null || cf.per100g.sugar === undefined) && lf.per100g.sugar != null) cf.per100g.sugar = lf.per100g.sugar;
-        if ((cf.per100g.fiber === null || cf.per100g.fiber === undefined) && lf.per100g.fiber != null) cf.per100g.fiber = lf.per100g.fiber;
+        if ((cf.per100g.sugar == null) && lf.per100g.sugar != null) cf.per100g.sugar = lf.per100g.sugar;
+        if ((cf.per100g.fiber == null) && lf.per100g.fiber != null) cf.per100g.fiber = lf.per100g.fiber;
        }
        if (cf.perServing && lf.perServing) {
-        if ((cf.perServing.sugar === null || cf.perServing.sugar === undefined) && lf.perServing.sugar != null) cf.perServing.sugar = lf.perServing.sugar;
-        if ((cf.perServing.fiber === null || cf.perServing.fiber === undefined) && lf.perServing.fiber != null) cf.perServing.fiber = lf.perServing.fiber;
+        if ((cf.perServing.sugar == null) && lf.perServing.sugar != null) cf.perServing.sugar = lf.perServing.sugar;
+        if ((cf.perServing.fiber == null) && lf.perServing.fiber != null) cf.perServing.fiber = lf.perServing.fiber;
        }
        if (!cf.brand && lf.brand) cf.brand = lf.brand;
        if (!cf.source && lf.source) cf.source = lf.source;
@@ -3797,94 +3984,41 @@ document.addEventListener('DOMContentLoaded', async () => {
       Object.keys(categoryEmojis).forEach(function(k){ delete categoryEmojis[k]; });
       Object.assign(categoryEmojis, data.categoryEmojis);
      }
-     if (data.savedDocs && Array.isArray(data.savedDocs)) {
-      savedDocs = data.savedDocs;
-      saveDocs();
-     }
-     renderCategories();
-     renderCategoryPills();
-     renderFoodList();
-     updateStats();
+     if (data.savedDocs && Array.isArray(data.savedDocs)) { savedDocs = data.savedDocs; saveDocs(); }
+     renderCategories(); renderCategoryPills(); renderFoodList(); updateStats();
      saveToIndexedDB();
      await saveLastSyncTime();
      setSheetSyncStatus('<i class="fas fa-check-circle"></i> 下載成功！雲端共 ' + cloudFoodCount + ' 款食物', 'success');
      showToast('已從 Firebase 下載 ' + cloudFoodCount + ' 款食物');
     } else {
-     setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 雲端沒有食物資料，保留本地 ' + localFoodCount + ' 款', 'error');
+     setSheetSyncStatus('<i class="fas fa-exclamation-triangle"></i> 雲端沒有食物資料', 'error');
      showToast('⚠️ 雲端沒有食物資料');
     }
    } catch (err) {
-    console.error('Download error:', err);
     setSheetSyncStatus('<i class="fas fa-exclamation-circle"></i> ' + err.message, 'error');
     showToast('下載失敗：' + err.message);
    } finally {
-    if (btn) {
-     btn.disabled = false;
-     btn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> 下載';
-    }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> 下載'; }
    }
   }
 
   async function autoUploadIfEnabled() {
    if (!autoSyncEnabled || _syncLock) return;
    if (foods.length === 0) return;
-   if (!_firebaseConfig.projectId || !_firebaseConfig.apiKey || !_firebaseConfig.syncKey) return;
+   if (!_firebaseConfig.projectId || !_firebaseConfig.syncKey) return;
+   var token = await getValidAuthToken();
+   if (!token) return;
    try {
     showToast('正在自動同步...', 1000);
     await firebaseWrite({
-     foods: foods,
-     categories: categories,
-     categoryEmojis: categoryEmojis,
-     savedDocs: savedDocs,
-     lastUpdated: new Date().toISOString()
+     foods: foods, categories: categories, categoryEmojis: categoryEmojis,
+     savedDocs: savedDocs, lastUpdated: new Date().toISOString()
     });
     showToast('已自動同步到 Firebase ✓ (' + foods.length + ' 款)', 1500);
    } catch (err) {
     console.log('Auto-sync failed:', err.message);
     showToast('自動同步失敗', 1500);
    }
-  }
-
-  function showFirebaseSetup() {
-   var firestoreRules = 'rules_version = \u00272\u0027;\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /nutrition/{docId} {\n      allow read, write: if true;\n    }\n  }\n}';
-   var modal = document.createElement('div');
-   modal.className = 'modal-overlay show';
-   modal.innerHTML = '<div class="modal" style="max-width: 95vw; max-height: 90vh;">' +
-    '<div class="modal-header">' +
-    '<span class="modal-title">🔥 Firebase 設定教學</span>' +
-    '<button class="modal-close" onclick="this.closest(\'.modal-overlay\').remove()">' +
-    '<i class="fas fa-times"></i></button></div>' +
-    '<div class="modal-body" style="overflow-y: auto; max-height: 70vh;">' +
-    '<div style="margin-bottom: 16px;">' +
-    '<strong>步驟 1：建立 Firebase 專案</strong>' +
-    '<ol style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary);">' +
-    '<li>前往 <a href="https://console.firebase.google.com" target="_blank" style="color: var(--accent);">Firebase Console</a></li>' +
-    '<li>點擊「新增專案」，輸入名稱</li>' +
-    '<li>可以關閉 Google Analytics（非必要）</li>' +
-    '<li>等待專案建立完成</li></ol></div>' +
-    '<div style="margin-bottom: 16px;">' +
-    '<strong>步驟 2：啟用 Cloud Firestore</strong>' +
-    '<ol style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary);">' +
-    '<li>在左側選單點「Cloud Firestore」→「建立資料庫」</li>' +
-    '<li>選擇地區（建議選 asia-east1 或 asia-southeast1）</li>' +
-    '<li>選擇「以測試模式開始」</li></ol></div>' +
-    '<div style="margin-bottom: 16px;">' +
-    '<strong>步驟 3：設定安全規則（建議）</strong>' +
-    '<p style="font-size: 13px; color: var(--text-secondary); margin: 8px 0;">到 Firestore → 規則，貼上以下規則：</p>' +
-    '<pre style="background: var(--bg-primary); padding: 12px; border-radius: 8px; font-size: 11px; overflow-x: auto; white-space: pre-wrap; margin-top: 8px;">rules_version = \u00272\u0027;\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /nutrition/{docId} {\n      allow read, write: if true;\n    }\n  }\n}</pre></div>' +
-    '<div style="margin-bottom: 16px;">' +
-    '<strong>步驟 4：取得設定資訊</strong>' +
-    '<ol style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary);">' +
-    '<li>到專案設定（齒輪圖示）→ 一般</li>' +
-    '<li>向下捲動到「您的應用程式」</li>' +
-    '<li>如果沒有應用程式，點「&lt;/&gt;」新增網頁應用程式</li>' +
-    '<li>複製 <code style="background: var(--divider); padding: 2px 6px; border-radius: 4px;">projectId</code> 和 <code style="background: var(--divider); padding: 2px 6px; border-radius: 4px;">apiKey</code></li>' +
-    '<li>回到本 App 填入設定</li></ol></div>' +
-    '<div><strong>步驟 5：設定同步密鑰</strong>' +
-    '<p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">' +
-    '自訂一個同步密鑰（任意英文字串），所有裝置使用相同密鑰即可同步。密鑰就像你的資料夾名稱。</p></div>' +
-    '</div></div>';
-   document.body.appendChild(modal);
   }
 
   async function showCloudSettings() {
@@ -3896,13 +4030,9 @@ document.addEventListener('DOMContentLoaded', async () => {
    setSheetSyncStatus('', '');
    try {
     await loadFirebaseConfig();
-    var pIdInput = document.getElementById('firebaseProjectId');
-    var apiKeyInput = document.getElementById('firebaseApiKey');
     var syncKeyInput = document.getElementById('firebaseSyncKey');
-    if (pIdInput) pIdInput.value = _firebaseConfig.projectId || '';
-    if (apiKeyInput) apiKeyInput.value = _firebaseConfig.apiKey || '';
-    if (syncKeyInput) syncKeyInput.value = _firebaseConfig.syncKey || '';
-    updateSyncModeIndicator(!!_firebaseConfig.projectId);
+    if (syncKeyInput) syncKeyInput.value = _firebaseConfig.syncKey || 'main';
+    updateAuthUI();
     var time = await loadLastSyncTime();
     updateLastSyncDisplay(time);
     var enabled = await loadAutoSyncSetting();
@@ -3915,54 +4045,53 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function autoSyncOnLoad() {
    _syncLock = true;
    try {
-    if (_firebaseConfig.projectId && _firebaseConfig.apiKey && _firebaseConfig.syncKey) {
-     try {
-      var data = await firebaseRead();
-      if (data && data.foods && data.foods.length > 0) {
-       var cloudCount = data.foods.length;
-       var localCount = foods.length;
-       if (cloudCount < localCount * 0.5) {
-        console.log('Auto-sync skipped: cloud has ' + cloudCount + ' items vs local ' + localCount);
-       } else {
-        // 合併雲端資料：保留本地已有的 sugar/fiber 數據
-        var localFoodsMap = {};
-        foods.forEach(function(f) { localFoodsMap[f.id] = f; });
-        data.foods.forEach(function(cf) {
-         var lf = localFoodsMap[cf.id];
-         if (lf) {
-          if (cf.per100g && lf.per100g) {
-           if ((cf.per100g.sugar === null || cf.per100g.sugar === undefined) && lf.per100g.sugar !== null && lf.per100g.sugar !== undefined) cf.per100g.sugar = lf.per100g.sugar;
-           if ((cf.per100g.fiber === null || cf.per100g.fiber === undefined) && lf.per100g.fiber !== null && lf.per100g.fiber !== undefined) cf.per100g.fiber = lf.per100g.fiber;
+    if (_firebaseConfig.projectId && _firebaseConfig.syncKey) {
+     var token = await getValidAuthToken();
+     if (token) {
+      try {
+       var data = await firebaseRead();
+       if (data && data.foods && data.foods.length > 0) {
+        var cloudCount = data.foods.length;
+        var localCount = foods.length;
+        if (cloudCount < localCount * 0.5) {
+         console.log('Auto-sync skipped: cloud ' + cloudCount + ' vs local ' + localCount);
+        } else {
+         var localFoodsMap = {};
+         foods.forEach(function(f) { localFoodsMap[f.id] = f; });
+         data.foods.forEach(function(cf) {
+          var lf = localFoodsMap[cf.id];
+          if (lf) {
+           if (cf.per100g && lf.per100g) {
+            if (cf.per100g.sugar == null && lf.per100g.sugar != null) cf.per100g.sugar = lf.per100g.sugar;
+            if (cf.per100g.fiber == null && lf.per100g.fiber != null) cf.per100g.fiber = lf.per100g.fiber;
+           }
+           if (cf.perServing && lf.perServing) {
+            if (cf.perServing.sugar == null && lf.perServing.sugar != null) cf.perServing.sugar = lf.perServing.sugar;
+            if (cf.perServing.fiber == null && lf.perServing.fiber != null) cf.perServing.fiber = lf.perServing.fiber;
+           }
+           if (!cf.brand && lf.brand) cf.brand = lf.brand;
+           if (!cf.source && lf.source) cf.source = lf.source;
           }
-          if (cf.perServing && lf.perServing) {
-           if ((cf.perServing.sugar === null || cf.perServing.sugar === undefined) && lf.perServing.sugar !== null && lf.perServing.sugar !== undefined) cf.perServing.sugar = lf.perServing.sugar;
-           if ((cf.perServing.fiber === null || cf.perServing.fiber === undefined) && lf.perServing.fiber !== null && lf.perServing.fiber !== undefined) cf.perServing.fiber = lf.perServing.fiber;
-          }
-          if (!cf.brand && lf.brand) cf.brand = lf.brand;
-          if (!cf.source && lf.source) cf.source = lf.source;
+         });
+         foods = data.foods;
+         if (data.categories) categories = data.categories;
+         if (data.categoryEmojis) {
+          Object.keys(categoryEmojis).forEach(function(k){ delete categoryEmojis[k]; });
+          Object.assign(categoryEmojis, data.categoryEmojis);
          }
-        });
-        foods = data.foods;
-        if (data.categories) categories = data.categories;
-        if (data.categoryEmojis) {
-         Object.keys(categoryEmojis).forEach(function(k){ delete categoryEmojis[k]; });
-         Object.assign(categoryEmojis, data.categoryEmojis);
+         renderCategories(); renderCategoryPills(); renderFoodList(); updateStats();
+         await saveToIndexedDB();
+         await saveLastSyncTime();
+         console.log('Auto-synced from Firebase:', foods.length, 'items');
         }
-        renderCategories();
-        renderCategoryPills();
-        renderFoodList();
-        updateStats();
-        await saveToIndexedDB();
-        await saveLastSyncTime();
-        console.log('Auto-synced from Firebase:', foods.length, 'items');
+        if (data.savedDocs && Array.isArray(data.savedDocs)) {
+         savedDocs = data.savedDocs;
+         await saveDocs();
+        }
        }
-       if (data.savedDocs && Array.isArray(data.savedDocs)) {
-        savedDocs = data.savedDocs;
-        await saveDocs();
-       }
+      } catch (err) {
+       console.log('Auto-sync skipped:', err.message);
       }
-     } catch (err) {
-      console.log('Auto-sync skipped:', err.message);
      }
     }
     autoSyncEnabled = await loadAutoSyncSetting();
@@ -4053,4 +4182,268 @@ document.addEventListener('DOMContentLoaded', async () => {
    docSelectedFoodIds = [];
    docMode = 'per100g';
    document.getElementById('docNameInput').value = '';
-  ...
+   document.getElementById('docNotesInput').value = '';
+   document.getElementById('docFoodSearch').value = '';
+   document.getElementById('docModePer100g').classList.add('active');
+   document.getElementById('docModePerServing').classList.remove('active');
+   // Reset nutrient checkboxes
+   document.querySelectorAll('#nutPicker input').forEach(function(cb){
+    var def = ['calories','protein','fat','carbs'].indexOf(cb.value) >= 0;
+    cb.checked = def;
+    cb.parentElement.classList.toggle('checked', def);
+   });
+   renderDocFoodPicker();
+   renderDocSelectedChips();
+   document.getElementById('createDocModal').classList.add('active');
+  }
+  function closeCreateDocModal() {
+   document.getElementById('createDocModal').classList.remove('active');
+  }
+  function setDocMode(m) {
+   docMode = m;
+   document.getElementById('docModePer100g').classList.toggle('active', m==='per100g');
+   document.getElementById('docModePerServing').classList.toggle('active', m==='perServing');
+  }
+  function toggleNutPick(cb) {
+   cb.parentElement.classList.toggle('checked', cb.checked);
+  }
+
+  function renderDocFoodPicker() {
+   var search = (document.getElementById('docFoodSearch').value || '').toLowerCase();
+   var list = foods.filter(function(f){
+    if (!search) return true;
+    return f.name.toLowerCase().indexOf(search)>=0 || (f.nameEn||'').toLowerCase().indexOf(search)>=0;
+   });
+   var c = document.getElementById('docFoodPicker');
+   c.innerHTML = list.slice(0, 100).map(function(f){
+    var sel = docSelectedFoodIds.indexOf(f.id) >= 0;
+    var emoji = categoryEmojis[f.category] || '';
+    return '<div class="food-picker-item'+(sel?' selected':'')+'" onclick="toggleDocFood(\''+f.id+'\')">' +
+     '<input type="checkbox" '+(sel?'checked':'')+' tabindex="-1">' +
+     '<span class="food-picker-item-name">'+(emoji?emoji+' ':'')+_esc(f.name)+'</span>' +
+     '<span class="food-picker-item-cat">'+_esc(f.category)+'</span>' +
+    '</div>';
+   }).join('');
+   if (list.length > 100) c.innerHTML += '<div style="padding:10px;text-align:center;color:var(--text-muted);font-size:12px;">顯示前100項，請用搜尋縮窄範圍</div>';
+  }
+  function filterDocFoodList() { renderDocFoodPicker(); }
+  function toggleDocFood(id) {
+   var idx = docSelectedFoodIds.indexOf(id);
+   if (idx >= 0) docSelectedFoodIds.splice(idx, 1);
+   else docSelectedFoodIds.push(id);
+   renderDocFoodPicker();
+   renderDocSelectedChips();
+  }
+  function renderDocSelectedChips() {
+   var c = document.getElementById('docSelectedFoods');
+   if (!docSelectedFoodIds.length) { c.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">尚未選擇食物</span>'; return; }
+   c.innerHTML = docSelectedFoodIds.map(function(id){
+    var f = foods.find(function(x){return x.id===id;});
+    var name = f ? f.name : '?';
+    return '<span class="doc-selected-chip">'+_esc(name)+' <button onclick="event.stopPropagation();toggleDocFood(\''+id+'\')">&times;</button></span>';
+   }).join('');
+  }
+
+  function saveDocument() {
+   var name = document.getElementById('docNameInput').value.trim();
+   if (!name) { showToast('請輸入文件名稱'); return; }
+   if (!docSelectedFoodIds.length) { showToast('請至少選擇一個食物'); return; }
+   var nutrients = [];
+   document.querySelectorAll('#nutPicker input:checked').forEach(function(cb){ nutrients.push(cb.value); });
+   if (!nutrients.length) { showToast('請至少選擇一項營養素'); return; }
+   var notes = document.getElementById('docNotesInput').value.trim();
+   if (editingDocId) {
+    var doc = savedDocs.find(function(d){return d.id===editingDocId;});
+    if (doc) {
+     doc.name = name;
+     doc.foodIds = docSelectedFoodIds.slice();
+     doc.nutrients = nutrients;
+     doc.mode = docMode;
+     doc.notes = notes;
+     doc.updatedAt = Date.now();
+    }
+   } else {
+    savedDocs.unshift({
+     id: 'doc_' + Date.now(),
+     name: name,
+     foodIds: docSelectedFoodIds.slice(),
+     nutrients: nutrients,
+     mode: docMode,
+     notes: notes,
+     createdAt: Date.now()
+    });
+   }
+   saveDocs();
+   closeCreateDocModal();
+   renderDocList();
+   showToast(editingDocId ? '文件已更新' : '文件已建立');
+  }
+
+  /* View Document */
+  var viewDocCurrentMode = 'per100g';
+
+  function viewDocument(docId) {
+   var doc = savedDocs.find(function(d){return d.id===docId;});
+   if (!doc) return;
+   viewingDocId = docId;
+   viewDocCurrentMode = doc.mode || 'per100g';
+   document.getElementById('viewDocTitle').innerHTML = '<i class="fas fa-file-alt" style="color:#3b82f6;"></i> ' + _esc(doc.name);
+   var dateStr = doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('zh-HK',{year:'numeric',month:'long',day:'numeric'}) : '';
+   document.getElementById('viewDocMeta').innerHTML =
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--text-secondary);font-size:13px;">' +
+    (dateStr ? '<span><i class="fas fa-calendar"></i> ' + dateStr + '</span>' : '') +
+    '<span><i class="fas fa-utensils"></i> ' + doc.foodIds.length + ' 項食物</span>' +
+    '</div>' +
+    (doc.notes ? '<div style="margin-top:8px;font-size:13px;color:var(--text-muted);"><i class="fas fa-sticky-note"></i> ' + _esc(doc.notes) + '</div>' : '');
+
+   // Render mode toggle
+   document.getElementById('viewDocModeToggle').innerHTML =
+    '<div class="input-mode-toggle">' +
+    '<button type="button" class="input-mode-btn' + (viewDocCurrentMode==='per100g'?' active':'') + '" onclick="switchViewDocMode(\'per100g\')">每 100g</button>' +
+    '<button type="button" class="input-mode-btn' + (viewDocCurrentMode==='perServing'?' active':'') + '" onclick="switchViewDocMode(\'perServing\')">每食用份量</button>' +
+    '</div>';
+
+   renderViewDocTable();
+   document.getElementById('viewDocModal').classList.add('active');
+  }
+
+  function switchViewDocMode(mode) {
+   viewDocCurrentMode = mode;
+   var btns = document.querySelectorAll('#viewDocModeToggle .input-mode-btn');
+   btns.forEach(function(b){ b.classList.remove('active'); });
+   if (mode === 'per100g') btns[0].classList.add('active');
+   else btns[1].classList.add('active');
+   renderViewDocTable();
+  }
+
+  function renderViewDocTable() {
+   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
+   if (!doc) return;
+   var mode = viewDocCurrentMode;
+   var nuts = doc.nutrients || [];
+   var foodList = doc.foodIds.map(function(id){ return foods.find(function(x){return x.id===id;}); }).filter(Boolean);
+   var modeLabel = mode === 'per100g' ? '每 100g' : '每食用份量';
+   var html = '<table class="doc-view-table"><thead><tr><th>食物</th>';
+   nuts.forEach(function(k){
+    var m = NUT_META[k];
+    html += '<th>' + (m?m.label:k) + '<br><span style="font-weight:400;font-size:10px;opacity:0.8;">(' + (m?m.unit:'') + ')</span></th>';
+   });
+   html += '</tr></thead><tbody>';
+   var totals = {};
+   var counts = {};
+   nuts.forEach(function(k){ totals[k] = 0; counts[k] = 0; });
+   foodList.forEach(function(f){
+    var data = null;
+    if (mode === 'per100g') {
+     data = f.per100g || {};
+    } else {
+     var ps = f.perServing;
+     var p100 = f.per100g;
+     if (ps && ps.weight && p100) {
+      data = {};
+      var w = ps.weight;
+      nuts.forEach(function(k){
+       if (ps[k] !== null && ps[k] !== undefined) { data[k] = ps[k]; }
+       else if (p100[k] !== null && p100[k] !== undefined) { data[k] = Math.round(p100[k]*w/100*10)/10; }
+       else { data[k] = null; }
+      });
+      data._weight = w;
+     } else if (ps) { data = ps; }
+     else { data = {}; }
+    }
+    if (!data) data = {};
+    var emoji = categoryEmojis[f.category] || '';
+    html += '<tr><td>' + (emoji?emoji+' ':'') + _esc(f.name);
+    if (mode==='perServing' && (data._weight || (f.perServing && f.perServing.weight))) {
+     var wt = data._weight || f.perServing.weight;
+     html += '<br><span style="font-size:10px;color:var(--text-muted);">' + wt + 'g</span>';
+    }
+    html += '</td>';
+    nuts.forEach(function(k){
+     var v = data[k];
+     var display = '';
+     if (v !== null && v !== undefined) {
+      display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
+      totals[k] += display;
+      counts[k]++;
+     }
+     var m = NUT_META[k];
+     html += '<td style="color:'+(m?m.color:'inherit')+';font-weight:600;">'+display+'</td>';
+    });
+    html += '</tr>';
+   });
+   // Total / average row
+   if (foodList.length > 1) {
+    html += '<tr class="doc-total-row"><td>合計</td>';
+    nuts.forEach(function(k){
+     if (counts[k] > 0) {
+      var v = totals[k];
+      var display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
+      html += '<td>'+display+'</td>';
+     } else {
+      html += '<td></td>';
+     }
+    });
+    html += '</tr>';
+    html += '<tr class="doc-total-row" style="opacity:0.7;"><td>平均</td>';
+    nuts.forEach(function(k){
+     if (counts[k] > 0) {
+      var v = totals[k] / counts[k];
+      var display = (k==='calories'||k==='sodium'||k==='calcium') ? Math.round(v) : Math.round(v*10)/10;
+      html += '<td>'+display+'</td>';
+     } else {
+      html += '<td></td>';
+     }
+    });
+    html += '</tr>';
+   }
+   html += '</tbody></table>';
+   document.getElementById('viewDocTableWrap').innerHTML = html;
+  }
+  function closeViewDocModal() {
+   document.getElementById('viewDocModal').classList.remove('active');
+   viewingDocId = null;
+  }
+  function editCurrentDoc() {
+   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
+   if (!doc) return;
+   closeViewDocModal();
+   editingDocId = doc.id;
+   docSelectedFoodIds = doc.foodIds.slice();
+   docMode = doc.mode || 'per100g';
+   document.getElementById('docNameInput').value = doc.name;
+   document.getElementById('docNotesInput').value = doc.notes || '';
+   document.getElementById('docFoodSearch').value = '';
+   document.getElementById('docModePer100g').classList.toggle('active', docMode==='per100g');
+   document.getElementById('docModePerServing').classList.toggle('active', docMode==='perServing');
+   document.querySelectorAll('#nutPicker input').forEach(function(cb){
+    var on = (doc.nutrients||[]).indexOf(cb.value) >= 0;
+    cb.checked = on;
+    cb.parentElement.classList.toggle('checked', on);
+   });
+   renderDocFoodPicker();
+   renderDocSelectedChips();
+   document.getElementById('createDocModal').classList.add('active');
+  }
+  function deleteCurrentDoc() {
+   var doc = savedDocs.find(function(d){return d.id===viewingDocId;});
+   if (!doc) return;
+   // Show confirm
+   var overlay = document.getElementById('confirmModal');
+   document.getElementById('confirmTitle').textContent = '確認刪除？';
+   document.getElementById('confirmMessage').textContent = '確定要刪除「' + doc.name + '」？此操作無法復原。';
+   var btn = document.getElementById('confirmAction');
+   btn.onclick = function(){
+    savedDocs = savedDocs.filter(function(d){return d.id!==viewingDocId;});
+    saveDocs();
+    closeConfirmModal();
+    closeViewDocModal();
+    renderDocList();
+    showToast('文件已刪除');
+   };
+   overlay.classList.add('active');
+  }
+
+</script>
+</body>
+</html>
