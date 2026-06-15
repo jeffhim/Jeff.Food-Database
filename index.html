@@ -321,6 +321,10 @@ to{transform:rotate(360deg);}
 .diary-preview-val{font-size:16px;font-weight:700;margin-bottom:1px;}
 .diary-preview-lbl{font-size:10px;color:var(--text-muted);}
 .diary-empty{text-align:center;padding:24px 16px;color:var(--text-muted);font-size:14px;}
+.diary-create-food-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 16px;margin-top:12px;background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;}
+.diary-create-food-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(34,197,94,0.3);}
+.diary-create-food-btn:active{transform:scale(0.97);}
+.diary-create-food-btn i{font-size:16px;}
 .diary-empty i{font-size:28px;margin-bottom:8px;display:block;}
 </style>
 </head>
@@ -839,6 +843,9 @@ service cloud.firestore {
 <input type="text" id="diaryFoodSearchInput" placeholder="搜尋食物..." oninput="filterDiaryFoods()">
 </div>
 <div class="diary-food-result" id="diaryFoodResults"></div>
+<button type="button" class="diary-create-food-btn" onclick="openCreateFoodFromDiary()">
+<i class="fas fa-plus"></i> 新增食物到資料庫
+</button>
 </div>
 </div>
 </div>
@@ -1954,6 +1961,8 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('newCategoryGroup').style.display = 'none';
    document.getElementById('newCategoryName').value = '';
    document.getElementById('newCategoryEmoji').value = '';
+   // If user cancelled creating food from diary, reset the flag
+   _diaryCreatingFood = false;
   }
   let currentImageFile = null;
   function handleLabelImage(event) {
@@ -2560,6 +2569,11 @@ document.addEventListener('DOMContentLoaded', async () => {
    updateStats();
    saveToIndexedDB(); // Auto-save to IndexedDB
    doAutoSync();
+   // If creating food from diary, auto-open serving modal
+   if (_diaryCreatingFood) {
+    _diaryCreatingFood = false;
+    selectDiaryFood(foodData.id);
+   }
   }
   async function doAutoSync() {
    if (!_firebaseConfig.projectId || !_firebaseConfig.syncKey) return;
@@ -4703,6 +4717,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   var _diaryAddingMeal = 'breakfast';
   var _diarySelectedFood = null;
   var _diaryServingMode = 'serving';
+  var _diaryCreatingFood = false;
   var _diaryEditingEntry = null;
   var _diaryEditMode = 'serving';
 
@@ -4851,6 +4866,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   function closeDiaryAddFood() {
    document.getElementById('diaryAddFoodModal').classList.remove('active');
   }
+  function openCreateFoodFromDiary() {
+   _diaryCreatingFood = true;
+   closeDiaryAddFood();
+   // Pre-fill search text into food name if user typed something
+   var searchVal = document.getElementById('diaryFoodSearchInput').value.trim();
+   openAddModal();
+   if (searchVal) {
+    document.getElementById('foodName').value = searchVal;
+   }
+  }
   function filterDiaryFoods() {
    var term = (document.getElementById('diaryFoodSearchInput').value || '').toLowerCase();
    var filtered = foods;
@@ -4864,7 +4889,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    }
    var container = document.getElementById('diaryFoodResults');
    if (filtered.length === 0) {
-    container.innerHTML = '<div class="diary-empty"><i class="fas fa-search"></i>搵唔到食物</div>';
+    container.innerHTML = '<div class="diary-empty"><i class="fas fa-search"></i>搵唔到食物<br><span style="font-size:13px;margin-top:6px;display:inline-block;">可以點擊下方按鈕新增</span></div>';
     return;
    }
    container.innerHTML = filtered.slice(0, 50).map(function(f) {
@@ -4954,189 +4979,4 @@ document.addEventListener('DOMContentLoaded', async () => {
    ['calories','protein','fat','carbs','sodium','calcium'].forEach(function(k) {
     var v = n[k] || 0;
     var display = k === 'calories' ? Math.round(v) : v.toFixed(1);
-    html += '<div class="diary-preview-box"><div class="diary-preview-val" style="color:'+colors[k]+'">'+display+'</div><div class="diary-preview-lbl">'+labels[k]+' ('+units[k]+')</div></div>';
-   });
-   document.getElementById('diaryPreviewNutrition').innerHTML = html;
-  }
-
-  function closeDiaryServing() {
-   document.getElementById('diaryServingModal').classList.remove('active');
-   _diarySelectedFood = null;
-  }
-
-  function confirmDiaryEntry() {
-   if (!_diarySelectedFood) return;
-   var servings = parseFloat(document.getElementById('diaryServingCount').value) || 1;
-   var grams = parseFloat(document.getElementById('diaryGramsInput').value) || 100;
-   var n = _calcNutritionForEntry(_diarySelectedFood, _diaryServingMode, servings, grams);
-   var entry = {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    foodId: _diarySelectedFood.id,
-    foodName: _diarySelectedFood.name,
-    category: _diarySelectedFood.category,
-    mode: _diaryServingMode,
-    servings: servings,
-    grams: grams,
-    servingWeight: (_diarySelectedFood.perServing && _diarySelectedFood.perServing.weight) || null,
-    nutrition: n
-   };
-   var dateKey = _diaryKey(_diaryDate);
-   var day = _getDayData(dateKey);
-   day.meals[_diaryAddingMeal].push(entry);
-   closeDiaryServing();
-   renderDiary();
-   saveDiaryData();
-   showToast('已加入' + _diaryMeals.find(function(m){return m.key===_diaryAddingMeal;}).name);
-  }
-
-  function deleteDiaryEntry(mealKey, idx) {
-   var dateKey = _diaryKey(_diaryDate);
-   var day = _getDayData(dateKey);
-   var entry = day.meals[mealKey][idx];
-   if (!entry) return;
-   var overlay = document.getElementById('confirmModal');
-   document.getElementById('confirmTitle').textContent = '確認刪除？';
-   document.getElementById('confirmMessage').textContent = '確定要刪除「' + entry.foodName + '」？';
-   var btn = document.getElementById('confirmAction');
-   btn.onclick = function(){
-    day.meals[mealKey].splice(idx, 1);
-    if (day.meals.breakfast.length===0 && day.meals.lunch.length===0 && day.meals.dinner.length===0 && day.meals.snack.length===0) {
-     delete _diaryData[dateKey];
-    }
-    closeConfirmModal();
-    renderDiary();
-    saveDiaryData();
-    showToast('已刪除');
-   };
-   overlay.classList.add('active');
-  }
-
-  /* --- Edit Diary Entry --- */
-  function editDiaryEntry(mealKey, idx) {
-   var dateKey = _diaryKey(_diaryDate);
-   var day = _getDayData(dateKey);
-   var entry = day.meals[mealKey][idx];
-   if (!entry) return;
-   _diaryEditingEntry = { mealKey: mealKey, idx: idx, entry: entry };
-   var f = foods.find(function(x){ return x.id === entry.foodId; });
-   _diaryEditMode = entry.mode || 'serving';
-   document.getElementById('diaryEditEntryName').textContent = entry.foodName;
-   document.getElementById('diaryEditEntryMeta').textContent = entry.category || '';
-   var btns = document.querySelectorAll('#diaryEditModeToggle .input-mode-btn');
-   btns[0].classList.toggle('active', _diaryEditMode === 'serving');
-   btns[1].classList.toggle('active', _diaryEditMode === 'grams');
-   if (entry.servingWeight) {
-    document.getElementById('diaryEditWeightInfo').textContent = '(每份 ' + entry.servingWeight + 'g)';
-   } else {
-    document.getElementById('diaryEditWeightInfo').textContent = '';
-   }
-   document.getElementById('diaryEditServingCount').value = entry.servings || 1;
-   document.getElementById('diaryEditGramsInput').value = entry.grams || 100;
-   document.getElementById('diaryEditServingRow').style.display = _diaryEditMode === 'serving' ? 'flex' : 'none';
-   document.getElementById('diaryEditGramsRow').style.display = _diaryEditMode === 'grams' ? 'flex' : 'none';
-   updateDiaryEditPreview();
-   document.getElementById('diaryEditEntryModal').classList.add('active');
-  }
-
-  function setDiaryEditMode(mode) {
-   _diaryEditMode = mode;
-   var btns = document.querySelectorAll('#diaryEditModeToggle .input-mode-btn');
-   btns[0].classList.toggle('active', mode === 'serving');
-   btns[1].classList.toggle('active', mode === 'grams');
-   document.getElementById('diaryEditServingRow').style.display = mode === 'serving' ? 'flex' : 'none';
-   document.getElementById('diaryEditGramsRow').style.display = mode === 'grams' ? 'flex' : 'none';
-   updateDiaryEditPreview();
-  }
-
-  function updateDiaryEditPreview() {
-   if (!_diaryEditingEntry) return;
-   var entry = _diaryEditingEntry.entry;
-   var f = foods.find(function(x){ return x.id === entry.foodId; });
-   if (!f) return;
-   var servings = parseFloat(document.getElementById('diaryEditServingCount').value) || 1;
-   var grams = parseFloat(document.getElementById('diaryEditGramsInput').value) || 100;
-   var n = _calcNutritionForEntry(f, _diaryEditMode, servings, grams);
-   var labels = {calories:'卡路里',protein:'蛋白質',fat:'脂肪',carbs:'碳水',sodium:'鈉',calcium:'鈣'};
-   var units = {calories:'kcal',protein:'g',fat:'g',carbs:'g',sodium:'mg',calcium:'mg'};
-   var colors = {calories:'var(--cal-color)',protein:'var(--protein-color)',fat:'var(--fat-color)',carbs:'var(--carbs-color)',sodium:'var(--sodium-color)',calcium:'var(--calcium-color)'};
-   var html = '';
-   ['calories','protein','fat','carbs','sodium','calcium'].forEach(function(k) {
-    var v = n[k] || 0;
-    var display = k === 'calories' ? Math.round(v) : v.toFixed(1);
-    html += '<div class="diary-preview-box"><div class="diary-preview-val" style="color:'+colors[k]+'">'+display+'</div><div class="diary-preview-lbl">'+labels[k]+' ('+units[k]+')</div></div>';
-   });
-   document.getElementById('diaryEditPreviewNutrition').innerHTML = html;
-  }
-
-  function closeDiaryEditEntry() {
-   document.getElementById('diaryEditEntryModal').classList.remove('active');
-   _diaryEditingEntry = null;
-  }
-
-  function confirmDiaryEditEntry() {
-   if (!_diaryEditingEntry) return;
-   var f = foods.find(function(x){ return x.id === _diaryEditingEntry.entry.foodId; });
-   if (!f) { closeDiaryEditEntry(); return; }
-   var servings = parseFloat(document.getElementById('diaryEditServingCount').value) || 1;
-   var grams = parseFloat(document.getElementById('diaryEditGramsInput').value) || 100;
-   var n = _calcNutritionForEntry(f, _diaryEditMode, servings, grams);
-   var dateKey = _diaryKey(_diaryDate);
-   var day = _getDayData(dateKey);
-   var entry = day.meals[_diaryEditingEntry.mealKey][_diaryEditingEntry.idx];
-   if (entry) {
-    entry.mode = _diaryEditMode;
-    entry.servings = servings;
-    entry.grams = grams;
-    entry.nutrition = n;
-   }
-   closeDiaryEditEntry();
-   renderDiary();
-   saveDiaryData();
-   showToast('已更新');
-  }
-
-  /* --- Diary Storage --- */
-  async function saveDiaryData() {
-   if (!db) { memorySettings.diaryData = _diaryData; memorySettings.diaryGoals = _diaryGoals; return; }
-   try {
-    var tx = db.transaction(['settings'],'readwrite');
-    var store = tx.objectStore('settings');
-    store.put({key:'diaryData', value: JSON.parse(JSON.stringify(_diaryData))});
-    store.put({key:'diaryGoals', value: JSON.parse(JSON.stringify(_diaryGoals))});
-    await new Promise(function(ok,no){tx.oncomplete=ok;tx.onerror=no});
-   } catch(e) {}
-   // Trigger auto sync
-   if (typeof autoUploadIfEnabled === 'function') {
-    clearTimeout(window.autoUploadTimeout);
-    window.autoUploadTimeout = setTimeout(autoUploadIfEnabled, 2000);
-   }
-  }
-
-  async function loadDiaryData() {
-   if (!db) {
-    _diaryData = memorySettings.diaryData || {};
-    _diaryGoals = memorySettings.diaryGoals || _diaryGoals;
-    return;
-   }
-   try {
-    var tx = db.transaction(['settings'],'readonly');
-    var store = tx.objectStore('settings');
-    var dd = await _P(store.get('diaryData')).catch(function(){return null;});
-    var dg = await _P(store.get('diaryGoals')).catch(function(){return null;});
-    if (dd && dd.value) _diaryData = dd.value;
-    if (dg && dg.value) _diaryGoals = dg.value;
-   } catch(e) {}
-  }
-
-  function saveDiaryGoals() {
-   _diaryGoals.calories = parseInt(document.getElementById('goalCalories').value) || 2000;
-   _diaryGoals.protein = parseInt(document.getElementById('goalProtein').value) || 60;
-   _diaryGoals.fat = parseInt(document.getElementById('goalFat').value) || 65;
-   _diaryGoals.carbs = parseInt(document.getElementById('goalCarbs').value) || 300;
-   saveDiaryData();
-   renderDiary();
-  }
-
-</script>
-</body>
-</html>
+    html += '<div ...
