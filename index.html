@@ -267,11 +267,47 @@ to{transform:rotate(360deg);}
 .diary-macro-item{text-align:center;padding:10px 4px;background:var(--bg-primary);border-radius:12px;}
 .diary-macro-value{font-size:20px;font-weight:700;margin-bottom:2px;}
 .diary-macro-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;}
+.diary-macro-bar{width:100%;height:4px;background:var(--divider);border-radius:2px;margin-top:6px;overflow:hidden;}
+.diary-macro-bar-fill{height:100%;border-radius:2px;transition:width 0.3s ease;}
+.diary-macro-bar-fill.cal-fill{background:var(--cal-color);}
+.diary-macro-bar-fill.protein-fill{background:var(--protein-color);}
+.diary-macro-bar-fill.fat-fill{background:var(--fat-color);}
+.diary-macro-bar-fill.carbs-fill{background:var(--carbs-color);}
+.diary-macro-goal{font-size:10px;color:var(--text-muted);margin-top:2px;font-weight:400;}
 .diary-macro-item.cal .diary-macro-value{color:var(--cal-color);}
 .diary-macro-item.protein .diary-macro-value{color:var(--protein-color);}
 .diary-macro-item.fat .diary-macro-value{color:var(--fat-color);}
 .diary-macro-item.carbs .diary-macro-value{color:var(--carbs-color);}
 .diary-cal-bar{margin-top:12px;height:8px;background:var(--bg-primary);border-radius:4px;overflow:hidden;}
+.diary-calendar-section{background:var(--bg-card);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:var(--card-shadow);}
+.diary-calendar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.diary-calendar-title{font-size:15px;font-weight:700;color:var(--text-primary);}
+.diary-calendar-nav{display:flex;gap:6px;}
+.diary-calendar-nav button{background:var(--bg-primary);border:none;color:var(--text-secondary);width:30px;height:30px;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+.diary-calendar-nav button:hover{background:var(--divider);}
+.diary-calendar-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+.diary-calendar-weekday{text-align:center;font-size:10px;font-weight:600;color:var(--text-muted);padding:4px 0;text-transform:uppercase;}
+.diary-calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.diary-calendar-day{position:relative;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all 0.15s;}
+.diary-calendar-day:hover{background:var(--bg-primary);}
+.diary-calendar-day.empty{cursor:default;}
+.diary-calendar-day.today{outline:2px solid var(--accent);outline-offset:-2px;font-weight:700;color:var(--text-primary);}
+.diary-calendar-day.has-data{background:var(--bg-primary);}
+.diary-calendar-day.goal-met{background:rgba(34,197,94,0.15);color:#16a34a;}
+.dark .diary-calendar-day.goal-met{background:rgba(34,197,94,0.2);color:#4ade80;}
+.diary-calendar-day.goal-partial{background:rgba(234,179,8,0.15);color:#ca8a04;}
+.dark .diary-calendar-day.goal-partial{background:rgba(234,179,8,0.2);color:#facc15;}
+.diary-calendar-day.goal-missed{background:rgba(239,68,68,0.12);color:#dc2626;}
+.dark .diary-calendar-day.goal-missed{background:rgba(239,68,68,0.18);color:#f87171;}
+.diary-calendar-day .day-num{font-size:12px;line-height:1;}
+.diary-calendar-day .day-dot{width:4px;height:4px;border-radius:50%;margin-top:2px;}
+.diary-calendar-legend{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;justify-content:center;}
+.diary-calendar-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted);}
+.diary-calendar-legend-item .dot{width:10px;height:10px;border-radius:3px;}
+.diary-calendar-legend-item .dot.met{background:rgba(34,197,94,0.4);}
+.diary-calendar-legend-item .dot.partial{background:rgba(234,179,8,0.4);}
+.diary-calendar-legend-item .dot.missed{background:rgba(239,68,68,0.3);}
+.diary-calendar-legend-item .dot.nodata{background:var(--divider);}
 .diary-cal-fill{height:100%;border-radius:4px;transition:width 0.3s ease;background:linear-gradient(90deg,var(--accent),var(--cal-color));}
 .diary-cal-text{font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right;}
 .diary-meal-section{background:var(--bg-card);border-radius:16px;margin-bottom:12px;box-shadow:var(--card-shadow);overflow:hidden;}
@@ -299,11 +335,11 @@ to{transform:rotate(360deg);}
 .diary-goal-input input{width:100%;padding:10px 12px;border:2px solid var(--divider);border-radius:10px;font-size:16px;background:var(--bg-primary);color:var(--text-primary);outline:none;font-family:inherit;transition:border-color 0.2s;}
 .diary-goal-input input:focus{border-color:var(--accent);}
 /* Diary Add Food Modal */
-.diary-food-search{display:flex;align-items:center;background:var(--bg-primary);border-radius:12px;padding:10px 14px;gap:10px;margin-bottom:12px;border:2px solid var(--divider);transition:border-color 0.2s;}
+.diary-food-search{display:flex;align-items:center;background:var(--bg-primary);border-radius:12px;padding:10px 14px;gap:10px;border:2px solid var(--divider);transition:border-color 0.2s;}
 .diary-food-search:focus-within{border-color:var(--accent);}
 .diary-food-search i{color:var(--text-muted);font-size:16px;}
 .diary-food-search input{flex:1;border:none;background:transparent;font-size:16px;color:var(--text-primary);outline:none;font-family:inherit;}
-.diary-food-result{max-height:320px;overflow-y:auto;}
+.diary-food-result{max-height:50vh;overflow-y:auto;min-height:100px;margin-bottom:12px;}
 .diary-food-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--divider);cursor:pointer;transition:background 0.15s;gap:10px;}
 .diary-food-item:last-child{border-bottom:none;}
 .diary-food-item:hover{background:var(--bg-primary);}
@@ -325,6 +361,23 @@ to{transform:rotate(360deg);}
 .diary-create-food-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(34,197,94,0.3);}
 .diary-create-food-btn:active{transform:scale(0.97);}
 .diary-create-food-btn i{font-size:16px;}
+.source-manage-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:14px;padding:4px 8px;border-radius:6px;transition:background 0.2s;margin-left:4px;}
+.source-manage-btn:hover{background:rgba(34,197,94,0.1);}
+.source-mgmt-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:280px;overflow-y:auto;}
+.source-mgmt-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-primary);border-radius:10px;margin-bottom:6px;transition:background 0.15s;}
+.source-mgmt-item:hover{background:var(--divider);}
+.source-mgmt-item .drag-handle{cursor:grab;color:var(--text-muted);font-size:14px;padding:2px;}
+.source-mgmt-item .drag-handle:active{cursor:grabbing;}
+.source-mgmt-item .source-name{flex:1;font-size:14px;color:var(--text-primary);font-weight:500;}
+.source-mgmt-item .source-del{background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px;padding:4px 6px;border-radius:6px;transition:background 0.15s;}
+.source-mgmt-item .source-del:hover{background:rgba(239,68,68,0.1);}
+.source-mgmt-item .source-move{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;padding:4px 6px;border-radius:6px;transition:background 0.15s,color 0.15s;}
+.source-mgmt-item .source-move:hover{background:var(--bg-primary);color:var(--accent);}
+.source-add-row{display:flex;gap:8px;}
+.source-add-row input{flex:1;padding:10px 12px;border:2px solid var(--divider);border-radius:10px;font-size:15px;background:var(--bg-primary);color:var(--text-primary);outline:none;font-family:inherit;transition:border-color 0.2s;}
+.source-add-row input:focus{border-color:var(--accent);}
+.source-add-row button{padding:10px 16px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background 0.2s;}
+.source-add-row button:hover{background:var(--accent-dark);}
 .diary-empty i{font-size:28px;margin-bottom:8px;display:block;}
 </style>
 </head>
@@ -551,15 +604,61 @@ service cloud.firestore {
 <button onclick="diaryNextDay()"><i class="fas fa-chevron-right"></i></button>
 </div>
 <div class="diary-summary" id="diarySummary">
-<div class="diary-summary-title"><i class="fas fa-fire"></i> 每日攝取</div>
+<div class="diary-summary-title"><i class="fas fa-fire"></i> 每日攝取 vs 目標</div>
 <div class="diary-macro-grid">
-<div class="diary-macro-item cal"><div class="diary-macro-value" id="diaryTotalCal">0</div><div class="diary-macro-label">卡路里</div></div>
-<div class="diary-macro-item protein"><div class="diary-macro-value" id="diaryTotalProtein">0g</div><div class="diary-macro-label">蛋白質</div></div>
-<div class="diary-macro-item fat"><div class="diary-macro-value" id="diaryTotalFat">0g</div><div class="diary-macro-label">脂肪</div></div>
-<div class="diary-macro-item carbs"><div class="diary-macro-value" id="diaryTotalCarbs">0g</div><div class="diary-macro-label">碳水</div></div>
+<div class="diary-macro-item cal">
+<div class="diary-macro-value" id="diaryTotalCal">0</div>
+<div class="diary-macro-label">卡路里</div>
+<div class="diary-macro-bar"><div class="diary-macro-bar-fill cal-fill" id="diaryBarCal" style="width:0%"></div></div>
+<div class="diary-macro-goal" id="diaryGoalCalText">/ 2000</div>
+</div>
+<div class="diary-macro-item protein">
+<div class="diary-macro-value" id="diaryTotalProtein">0g</div>
+<div class="diary-macro-label">蛋白質</div>
+<div class="diary-macro-bar"><div class="diary-macro-bar-fill protein-fill" id="diaryBarProtein" style="width:0%"></div></div>
+<div class="diary-macro-goal" id="diaryGoalProteinText">/ 60g</div>
+</div>
+<div class="diary-macro-item fat">
+<div class="diary-macro-value" id="diaryTotalFat">0g</div>
+<div class="diary-macro-label">脂肪</div>
+<div class="diary-macro-bar"><div class="diary-macro-bar-fill fat-fill" id="diaryBarFat" style="width:0%"></div></div>
+<div class="diary-macro-goal" id="diaryGoalFatText">/ 65g</div>
+</div>
+<div class="diary-macro-item carbs">
+<div class="diary-macro-value" id="diaryTotalCarbs">0g</div>
+<div class="diary-macro-label">碳水</div>
+<div class="diary-macro-bar"><div class="diary-macro-bar-fill carbs-fill" id="diaryBarCarbs" style="width:0%"></div></div>
+<div class="diary-macro-goal" id="diaryGoalCarbsText">/ 300g</div>
+</div>
 </div>
 <div class="diary-cal-bar"><div class="diary-cal-fill" id="diaryCalFill" style="width:0%"></div></div>
 <div class="diary-cal-text" id="diaryCalText">目標：2000 kcal</div>
+</div>
+<div class="diary-calendar-section" id="diaryCalendarSection">
+<div class="diary-calendar-header">
+<div class="diary-calendar-title" id="diaryCalMonthTitle">2024年6月</div>
+<div class="diary-calendar-nav">
+<button onclick="diaryCalPrevMonth()"><i class="fas fa-chevron-left"></i></button>
+<button onclick="diaryCalToday()" style="font-size:11px;width:auto;padding:0 8px;">今天</button>
+<button onclick="diaryCalNextMonth()"><i class="fas fa-chevron-right"></i></button>
+</div>
+</div>
+<div class="diary-calendar-weekdays">
+<div class="diary-calendar-weekday">日</div>
+<div class="diary-calendar-weekday">一</div>
+<div class="diary-calendar-weekday">二</div>
+<div class="diary-calendar-weekday">三</div>
+<div class="diary-calendar-weekday">四</div>
+<div class="diary-calendar-weekday">五</div>
+<div class="diary-calendar-weekday">六</div>
+</div>
+<div class="diary-calendar-grid" id="diaryCalendarGrid"></div>
+<div class="diary-calendar-legend">
+<div class="diary-calendar-legend-item"><div class="dot met"></div>達標</div>
+<div class="diary-calendar-legend-item"><div class="dot partial"></div>部分達標</div>
+<div class="diary-calendar-legend-item"><div class="dot missed"></div>未達標</div>
+<div class="diary-calendar-legend-item"><div class="dot nodata"></div>無記錄</div>
+</div>
 </div>
 <div id="diaryMealSections"></div>
 <div class="diary-goal-section">
@@ -638,16 +737,8 @@ service cloud.firestore {
 </div>
 </div>
 <div class="form-group">
-<label class="form-label">資料來源 (選填)</label>
-<select class="form-select" id="foodSource">
-<option value="營養標籤" selected>營養標籤</option>
-<option value="食安中心">食安中心</option>
-<option value="營養資料庫">營養資料庫</option>
-<option value="餐廳菜單">餐廳菜單</option>
-<option value="自行估計">自行估計</option>
-<option value="AI識別">AI識別</option>
-<option value="其他">其他</option>
-</select>
+<label class="form-label">資料來源 (選填) <button type="button" class="source-manage-btn" onclick="openSourceManager()"><i class="fas fa-cog"></i> 管理</button></label>
+<select class="form-select" id="foodSource"></select>
 </div>
 <div class="form-section-title">營養資料輸入方式</div>
 <div class="input-mode-toggle">
@@ -715,6 +806,21 @@ service cloud.firestore {
 <div class="confirm-buttons">
 <button class="confirm-btn cancel" onclick="closeConfirmModal()">取消</button>
 <button class="confirm-btn danger" id="confirmAction">確認</button>
+</div>
+</div>
+</div>
+<div class="modal-overlay" id="sourceManagerModal">
+<div class="modal" style="max-width:420px;">
+<div class="modal-header">
+<span class="modal-title"><i class="fas fa-list-ul"></i> 管理資料來源</span>
+<button class="modal-close" onclick="closeSourceManager()"><i class="fas fa-times"></i></button>
+</div>
+<div class="modal-body">
+<ul class="source-mgmt-list" id="sourceMgmtList"></ul>
+<div class="source-add-row">
+<input type="text" id="newSourceInput" placeholder="新增資料來源...">
+<button type="button" onclick="addNewSource()"><i class="fas fa-plus"></i> 新增</button>
+</div>
 </div>
 </div>
 </div>
@@ -837,12 +943,12 @@ service cloud.firestore {
 <span class="modal-title"><i class="fas fa-plus-circle"></i> 新增食物</span>
 <button class="modal-close" onclick="closeDiaryAddFood()"><i class="fas fa-times"></i></button>
 </div>
-<div class="modal-body">
+<div class="modal-body" style="display:flex;flex-direction:column;">
 <div class="diary-food-search">
 <i class="fas fa-search"></i>
 <input type="text" id="diaryFoodSearchInput" placeholder="搜尋食物..." oninput="filterDiaryFoods()">
 </div>
-<div class="diary-food-result" id="diaryFoodResults"></div>
+<div class="diary-food-result" id="diaryFoodResults" style="order:-1;"></div>
 <button type="button" class="diary-create-food-btn" onclick="openCreateFoodFromDiary()">
 <i class="fas fa-plus"></i> 新增食物到資料庫
 </button>
@@ -1947,7 +2053,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('submitBtn').textContent = '儲存';
    document.getElementById('foodForm').reset();
    document.getElementById('editId').value = '';
-   document.getElementById('foodSource').value = '營養標籤';
+   renderFoodSourceDropdown('營養標籤');
    setInputMode('per100g');
    clearScanPreview();
    document.getElementById('newCategoryGroup').style.display = 'none';
@@ -2422,7 +2528,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('foodNameEn').value = food.nameEn || '';
    document.getElementById('foodBrand').value = food.brand || '';
    document.getElementById('foodCategory').value = food.category;
-   document.getElementById('foodSource').value = food.source || '營養標籤';
+   renderFoodSourceDropdown(food.source || '營養標籤');
    const displayVal = (val) => val !== null && val !== undefined ? val : '';
    const p = food.per100g || {};
    const ps = food.perServing;
@@ -2588,6 +2694,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      savedDocs: savedDocs,
      diaryData: _diaryData,
      diaryGoals: _diaryGoals,
+     foodSources: _foodSources,
      lastUpdated: new Date().toISOString()
     });
     showToast('已同步 ✓');
@@ -4145,6 +4252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
      savedDocs: savedDocs,
      diaryData: _diaryData,
      diaryGoals: _diaryGoals,
+     foodSources: _foodSources,
      lastUpdated: new Date().toISOString()
     });
     var verifyData = await firebaseRead();
@@ -4186,6 +4294,9 @@ document.addEventListener('DOMContentLoaded', async () => {
      if (data.savedDocs && Array.isArray(data.savedDocs)) { savedDocs = data.savedDocs; saveDocs(); }
      if (data.diaryData) { _diaryData = data.diaryData; }
      if (data.diaryGoals) { _diaryGoals = data.diaryGoals; }
+     if (data.foodSources && Array.isArray(data.foodSources) && data.foodSources.length > 0) {
+      _foodSources = data.foodSources; saveFoodSources(); renderFoodSourceDropdown();
+     }
      saveDiaryData();
     } else if (cloudFoodCount > 0) {
      var localMap = {};
@@ -4214,6 +4325,9 @@ document.addEventListener('DOMContentLoaded', async () => {
      if (data.savedDocs && Array.isArray(data.savedDocs)) { savedDocs = data.savedDocs; saveDocs(); }
      if (data.diaryData) { _diaryData = data.diaryData; }
      if (data.diaryGoals) { _diaryGoals = data.diaryGoals; }
+     if (data.foodSources && Array.isArray(data.foodSources) && data.foodSources.length > 0) {
+      _foodSources = data.foodSources; saveFoodSources(); renderFoodSourceDropdown();
+     }
      saveDiaryData();
      renderCategories(); renderCategoryPills(); renderFoodList(); updateStats();
      saveToIndexedDB();
@@ -4242,7 +4356,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     showToast('正在自動同步...', 1000);
     await firebaseWrite({
      foods: foods, categories: categories, categoryEmojis: categoryEmojis,
-     savedDocs: savedDocs, diaryData: _diaryData, diaryGoals: _diaryGoals, lastUpdated: new Date().toISOString()
+     savedDocs: savedDocs, diaryData: _diaryData, diaryGoals: _diaryGoals, foodSources: _foodSources, lastUpdated: new Date().toISOString()
     });
     showToast('已自動同步到 Firebase ✓ (' + foods.length + ' 款)', 1500);
    } catch (err) {
@@ -4320,8 +4434,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (data.diaryData) { _diaryData = data.diaryData; }
         if (data.diaryGoals) { _diaryGoals = data.diaryGoals; }
+        if (data.foodSources && Array.isArray(data.foodSources) && data.foodSources.length > 0) {
+         _foodSources = data.foodSources;
+         saveFoodSources();
+         renderFoodSourceDropdown();
+        }
         await saveDiaryData();
-        if (_currentTab === 'diary') renderDiary();
+        if (_currentTab === 'diary') { renderDiary(); renderDiaryCalendar(); }
        }
       } catch (err) {
        console.log('Auto-sync skipped:', err.message);
@@ -4700,6 +4819,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('.header-title').textContent = '飲食日記';
     document.querySelector('.header-subtitle').textContent = 'Food Diary';
     renderDiary();
+    renderDiaryCalendar();
    }
    adjustMainPadding();
   }
@@ -4718,6 +4838,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   var _diarySelectedFood = null;
   var _diaryServingMode = 'serving';
   var _diaryCreatingFood = false;
+  var _foodSources = ['營養標籤','食安中心','營養資料庫','餐廳菜單','自行估計','AI識別','其他'];
   var _diaryEditingEntry = null;
   var _diaryEditMode = 'serving';
 
@@ -4804,7 +4925,28 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('diaryTotalProtein').textContent = Math.round(totals.protein) + 'g';
    document.getElementById('diaryTotalFat').textContent = Math.round(totals.fat) + 'g';
    document.getElementById('diaryTotalCarbs').textContent = Math.round(totals.carbs) + 'g';
-   // Cal bar
+   // Goal comparison text
+   document.getElementById('diaryGoalCalText').textContent = '/ ' + _diaryGoals.calories;
+   document.getElementById('diaryGoalProteinText').textContent = '/ ' + _diaryGoals.protein + 'g';
+   document.getElementById('diaryGoalFatText').textContent = '/ ' + _diaryGoals.fat + 'g';
+   document.getElementById('diaryGoalCarbsText').textContent = '/ ' + _diaryGoals.carbs + 'g';
+   // Macro progress bars
+   var calPct = _diaryGoals.calories > 0 ? Math.min(100, (totals.calories / _diaryGoals.calories) * 100) : 0;
+   var proPct = _diaryGoals.protein > 0 ? Math.min(100, (totals.protein / _diaryGoals.protein) * 100) : 0;
+   var fatPct = _diaryGoals.fat > 0 ? Math.min(100, (totals.fat / _diaryGoals.fat) * 100) : 0;
+   var carbPct = _diaryGoals.carbs > 0 ? Math.min(100, (totals.carbs / _diaryGoals.carbs) * 100) : 0;
+   document.getElementById('diaryBarCal').style.width = calPct + '%';
+   document.getElementById('diaryBarProtein').style.width = proPct + '%';
+   document.getElementById('diaryBarFat').style.width = fatPct + '%';
+   document.getElementById('diaryBarCarbs').style.width = carbPct + '%';
+   // Overrun coloring
+   if (totals.calories > _diaryGoals.calories) { document.getElementById('diaryBarCal').style.background = '#ef4444'; }
+   else { document.getElementById('diaryBarCal').style.background = ''; }
+   if (totals.fat > _diaryGoals.fat) { document.getElementById('diaryBarFat').style.background = '#ef4444'; }
+   else { document.getElementById('diaryBarFat').style.background = ''; }
+   if (totals.carbs > _diaryGoals.carbs) { document.getElementById('diaryBarCarbs').style.background = '#ef4444'; }
+   else { document.getElementById('diaryBarCarbs').style.background = ''; }
+   // Cal bar (main)
    var pct = _diaryGoals.calories > 0 ? Math.min(100, (totals.calories / _diaryGoals.calories) * 100) : 0;
    document.getElementById('diaryCalFill').style.width = pct + '%';
    if (totals.calories > _diaryGoals.calories) {
@@ -5010,6 +5152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    day.meals[_diaryAddingMeal].push(entry);
    closeDiaryServing();
    renderDiary();
+   renderDiaryCalendar();
    saveDiaryData();
    showToast('已加入' + _diaryMeals.find(function(m){return m.key===_diaryAddingMeal;}).name);
   }
@@ -5030,6 +5173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     closeConfirmModal();
     renderDiary();
+    renderDiaryCalendar();
     saveDiaryData();
     showToast('已刪除');
    };
@@ -5116,6 +5260,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    }
    closeDiaryEditEntry();
    renderDiary();
+   renderDiaryCalendar();
    saveDiaryData();
    showToast('已更新');
   }
@@ -5152,6 +5297,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (dg && dg.value) _diaryGoals = dg.value;
    } catch(e) {}
   }
+  // Load food sources is called after loadDiaryData in init
 
   function saveDiaryGoals() {
    _diaryGoals.calories = parseInt(document.getElementById('goalCalories').value) || 2000;
@@ -5160,7 +5306,189 @@ document.addEventListener('DOMContentLoaded', async () => {
    _diaryGoals.carbs = parseInt(document.getElementById('goalCarbs').value) || 300;
    saveDiaryData();
    renderDiary();
+   renderDiaryCalendar();
   }
+
+  /* === Food Source Management === */
+  function renderFoodSourceDropdown(selectedValue) {
+   var sel = document.getElementById('foodSource');
+   if (!sel) return;
+   sel.innerHTML = '';
+   _foodSources.forEach(function(s) {
+    var opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    sel.appendChild(opt);
+   });
+   if (selectedValue && _foodSources.indexOf(selectedValue) >= 0) {
+    sel.value = selectedValue;
+   } else {
+    sel.value = _foodSources[0] || '';
+   }
+  }
+  function openSourceManager() {
+   renderSourceMgmtList();
+   document.getElementById('sourceManagerModal').classList.add('active');
+   document.getElementById('newSourceInput').value = '';
+  }
+  function closeSourceManager() {
+   document.getElementById('sourceManagerModal').classList.remove('active');
+   renderFoodSourceDropdown();
+  }
+  function renderSourceMgmtList() {
+   var list = document.getElementById('sourceMgmtList');
+   list.innerHTML = _foodSources.map(function(s, i) {
+    return '<li class="source-mgmt-item" data-idx="' + i + '">' +
+     '<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>' +
+     '<span class="source-name">' + _esc(s) + '</span>' +
+     '<button type="button" class="source-move" onclick="moveSource(' + i + ',-1)" title="上移"' + (i === 0 ? ' disabled style="opacity:0.3"' : '') + '><i class="fas fa-chevron-up"></i></button>' +
+     '<button type="button" class="source-move" onclick="moveSource(' + i + ',1)" title="下移"' + (i === _foodSources.length - 1 ? ' disabled style="opacity:0.3"' : '') + '><i class="fas fa-chevron-down"></i></button>' +
+     '<button type="button" class="source-del" onclick="deleteSource(' + i + ')" title="刪除"><i class="fas fa-trash-alt"></i></button>' +
+     '</li>';
+   }).join('');
+  }
+  function addNewSource() {
+   var input = document.getElementById('newSourceInput');
+   var name = input.value.trim();
+   if (!name) { showToast('請輸入來源名稱'); return; }
+   if (_foodSources.indexOf(name) >= 0) { showToast('此來源已存在'); return; }
+   _foodSources.push(name);
+   input.value = '';
+   renderSourceMgmtList();
+   saveFoodSources();
+   showToast('已新增「' + name + '」');
+  }
+  function deleteSource(idx) {
+   if (_foodSources.length <= 1) { showToast('至少需要一個來源'); return; }
+   var name = _foodSources[idx];
+   _foodSources.splice(idx, 1);
+   renderSourceMgmtList();
+   saveFoodSources();
+   showToast('已刪除「' + name + '」');
+  }
+  function moveSource(idx, dir) {
+   var newIdx = idx + dir;
+   if (newIdx < 0 || newIdx >= _foodSources.length) return;
+   var tmp = _foodSources[idx];
+   _foodSources[idx] = _foodSources[newIdx];
+   _foodSources[newIdx] = tmp;
+   renderSourceMgmtList();
+   saveFoodSources();
+  }
+  async function saveFoodSources() {
+   if (!db) { memorySettings.foodSources = _foodSources.slice(); return; }
+   try {
+    var tx = db.transaction(['settings'],'readwrite');
+    var store = tx.objectStore('settings');
+    store.put({key:'foodSources', value: JSON.parse(JSON.stringify(_foodSources))});
+    await new Promise(function(ok,no){tx.oncomplete=ok;tx.onerror=no});
+   } catch(e) {}
+   if (typeof autoUploadIfEnabled === 'function') {
+    clearTimeout(window.autoUploadTimeout);
+    window.autoUploadTimeout = setTimeout(autoUploadIfEnabled, 2000);
+   }
+  }
+  async function loadFoodSources() {
+   if (!db) {
+    if (memorySettings.foodSources) _foodSources = memorySettings.foodSources;
+    return;
+   }
+   try {
+    var tx = db.transaction(['settings'],'readonly');
+    var store = tx.objectStore('settings');
+    var fs = await _P(store.get('foodSources')).catch(function(){return null;});
+    if (fs && fs.value && Array.isArray(fs.value) && fs.value.length > 0) _foodSources = fs.value;
+   } catch(e) {}
+  }
+
+
+  /* === Tracking Calendar === */
+  var _diaryCalMonth = new Date();
+  _diaryCalMonth.setDate(1);
+
+  function diaryCalPrevMonth() {
+   _diaryCalMonth.setMonth(_diaryCalMonth.getMonth() - 1);
+   renderDiaryCalendar();
+  }
+  function diaryCalNextMonth() {
+   _diaryCalMonth.setMonth(_diaryCalMonth.getMonth() + 1);
+   renderDiaryCalendar();
+  }
+  function diaryCalToday() {
+   _diaryCalMonth = new Date();
+   _diaryCalMonth.setDate(1);
+   _diaryDate = new Date();
+   renderDiary();
+   renderDiaryCalendar();
+  }
+  function renderDiaryCalendar() {
+   var year = _diaryCalMonth.getFullYear();
+   var month = _diaryCalMonth.getMonth();
+   var titleEl = document.getElementById('diaryCalMonthTitle');
+   if (titleEl) titleEl.textContent = year + '年' + (month + 1) + '月';
+   var firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+   var daysInMonth = new Date(year, month + 1, 0).getDate();
+   var today = new Date();
+   var todayKey = _diaryKey(today);
+   var grid = document.getElementById('diaryCalendarGrid');
+   if (!grid) return;
+   var html = '';
+   // Empty cells before first day
+   for (var e = 0; e < firstDay; e++) {
+    html += '<div class="diary-calendar-day empty"></div>';
+   }
+   for (var d = 1; d <= daysInMonth; d++) {
+    var dateObj = new Date(year, month, d);
+    var dk = _diaryKey(dateObj);
+    var isToday = dk === todayKey;
+    var dayData = _diaryData[dk];
+    var hasData = false;
+    var totals = {calories:0, protein:0};
+    if (dayData && dayData.meals) {
+     var meals = dayData.meals;
+     ['breakfast','lunch','dinner','snack'].forEach(function(mk) {
+      if (meals[mk]) {
+       meals[mk].forEach(function(entry) {
+        hasData = true;
+        if (entry.nutrition) {
+         totals.calories += entry.nutrition.calories || 0;
+         totals.protein += entry.nutrition.protein || 0;
+        }
+       });
+      }
+     });
+    }
+    var cls = 'diary-calendar-day';
+    if (isToday) cls += ' today';
+    if (hasData) {
+     var calOk = totals.calories <= _diaryGoals.calories;
+     var proOk = totals.protein >= _diaryGoals.protein;
+     if (calOk && proOk) cls += ' goal-met';
+     else if (calOk || proOk) cls += ' goal-partial';
+     else cls += ' goal-missed';
+    }
+    html += '<div class="' + cls + '" onclick="diaryCalSelectDay(' + year + ',' + month + ',' + d + ')">';
+    html += '<span class="day-num">' + d + '</span>';
+    html += '</div>';
+   }
+   grid.innerHTML = html;
+  }
+  function diaryCalSelectDay(y, m, d) {
+   _diaryDate = new Date(y, m, d);
+   renderDiary();
+   renderDiaryCalendar();
+  }
+
+  /* === Init: load food sources === */
+  (async function initFoodSources() {
+   await loadFoodSources();
+   renderFoodSourceDropdown();
+  })();
+  // Initial calendar render
+  (function() {
+   _diaryCalMonth = new Date();
+   _diaryCalMonth.setDate(1);
+   setTimeout(function(){ renderDiaryCalendar(); }, 100);
+  })();
 
 </script>
 </body>
