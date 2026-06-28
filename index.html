@@ -279,35 +279,40 @@ to{transform:rotate(360deg);}
 .diary-macro-item.fat .diary-macro-value{color:var(--fat-color);}
 .diary-macro-item.carbs .diary-macro-value{color:var(--carbs-color);}
 .diary-cal-bar{margin-top:12px;height:8px;background:var(--bg-primary);border-radius:4px;overflow:hidden;}
-.diary-calendar-section{background:var(--bg-card);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:var(--card-shadow);}
-.diary-calendar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.diary-calendar-title{font-size:15px;font-weight:700;color:var(--text-primary);}
-.diary-calendar-nav{display:flex;gap:6px;}
-.diary-calendar-nav button{background:var(--bg-primary);border:none;color:var(--text-secondary);width:30px;height:30px;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
-.diary-calendar-nav button:hover{background:var(--divider);}
-.diary-calendar-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
-.diary-calendar-weekday{text-align:center;font-size:10px;font-weight:600;color:var(--text-muted);padding:4px 0;text-transform:uppercase;}
-.diary-calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.diary-calendar-day{position:relative;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all 0.15s;}
-.diary-calendar-day:hover{background:var(--bg-primary);}
-.diary-calendar-day.empty{cursor:default;}
-.diary-calendar-day.today{outline:2px solid var(--accent);outline-offset:-2px;font-weight:700;color:var(--text-primary);}
-.diary-calendar-day.has-data{background:var(--bg-primary);}
-.diary-calendar-day.goal-met{background:rgba(34,197,94,0.15);color:#16a34a;}
-.dark .diary-calendar-day.goal-met{background:rgba(34,197,94,0.2);color:#4ade80;}
-.diary-calendar-day.goal-partial{background:rgba(234,179,8,0.15);color:#ca8a04;}
-.dark .diary-calendar-day.goal-partial{background:rgba(234,179,8,0.2);color:#facc15;}
-.diary-calendar-day.goal-missed{background:rgba(239,68,68,0.12);color:#dc2626;}
-.dark .diary-calendar-day.goal-missed{background:rgba(239,68,68,0.18);color:#f87171;}
-.diary-calendar-day .day-num{font-size:12px;line-height:1;}
-.diary-calendar-day .day-dot{width:4px;height:4px;border-radius:50%;margin-top:2px;}
-.diary-calendar-legend{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;justify-content:center;}
-.diary-calendar-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted);}
-.diary-calendar-legend-item .dot{width:10px;height:10px;border-radius:3px;}
-.diary-calendar-legend-item .dot.met{background:rgba(34,197,94,0.4);}
-.diary-calendar-legend-item .dot.partial{background:rgba(234,179,8,0.4);}
-.diary-calendar-legend-item .dot.missed{background:rgba(239,68,68,0.3);}
-.diary-calendar-legend-item .dot.nodata{background:var(--divider);}
+.diary-water-section{background:var(--bg-card);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:var(--card-shadow);}
+.diary-water-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.diary-water-title{font-size:13px;font-weight:600;color:var(--text-secondary);display:flex;align-items:center;gap:8px;}
+.diary-water-title i{color:#3b82f6;}
+.diary-water-remaining{font-size:11px;color:var(--text-muted);font-weight:400;}
+.diary-water-body{display:flex;align-items:center;justify-content:center;gap:16px;}
+.diary-water-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--divider);background:var(--bg-primary);color:var(--text-primary);font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-family:inherit;}
+.diary-water-btn:hover{border-color:#3b82f6;color:#3b82f6;background:rgba(59,130,246,0.08);}
+.diary-water-btn:active{transform:scale(0.92);}
+.diary-water-display{text-align:center;min-width:100px;}
+.diary-water-amount{font-size:32px;font-weight:800;color:#3b82f6;cursor:pointer;background:none;border:none;font-family:inherit;width:120px;text-align:center;outline:none;-moz-appearance:textfield;}
+.diary-water-amount::-webkit-outer-spin-button,.diary-water-amount::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.diary-water-unit{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.diary-water-bar{height:6px;background:var(--divider);border-radius:3px;margin-top:10px;overflow:hidden;}
+.diary-water-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#3b82f6,#06b6d4);transition:width 0.3s ease;}
+.diary-alcohol-section{background:var(--bg-card);border-radius:16px;padding:14px 16px;margin-bottom:16px;box-shadow:var(--card-shadow);display:flex;align-items:center;justify-content:space-between;}
+.diary-alcohol-left{display:flex;align-items:center;gap:10px;}
+.diary-alcohol-left i{font-size:18px;color:var(--text-muted);}
+.diary-alcohol-label{font-size:14px;font-weight:600;color:var(--text-primary);}
+.diary-alcohol-toggle{position:relative;width:52px;height:28px;border-radius:14px;background:var(--divider);border:none;cursor:pointer;transition:background 0.25s;padding:0;}
+.diary-alcohol-toggle.active{background:#ef4444;}
+.diary-alcohol-toggle .toggle-knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform 0.25s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.diary-alcohol-toggle.active .toggle-knob{transform:translateX(24px);}
+.diary-stats-section{background:var(--bg-card);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:var(--card-shadow);}
+.diary-stats-title{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.diary-stats-title i{color:var(--accent);}
+.diary-stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.diary-stat-card{background:var(--bg-primary);border-radius:10px;padding:12px 10px;text-align:center;}
+.diary-stat-value{font-size:22px;font-weight:800;color:var(--accent);margin-bottom:2px;}
+.diary-stat-value.warn{color:#f59e0b;}
+.diary-stat-value.good{color:#22c55e;}
+.diary-stat-value.bad{color:#ef4444;}
+.diary-stat-label{font-size:10px;color:var(--text-muted);line-height:1.3;}
+/* calendar CSS removed - replaced with stats */
 .diary-cal-fill{height:100%;border-radius:4px;transition:width 0.3s ease;background:linear-gradient(90deg,var(--accent),var(--cal-color));}
 .diary-cal-text{font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right;}
 .diary-meal-section{background:var(--bg-card);border-radius:16px;margin-bottom:12px;box-shadow:var(--card-shadow);overflow:hidden;}
@@ -631,34 +636,37 @@ service cloud.firestore {
 <div class="diary-macro-goal" id="diaryGoalCarbsText">/ 300g</div>
 </div>
 </div>
+<div style="display:none;"><!-- water shown in dedicated section --></div>
 <div class="diary-cal-bar"><div class="diary-cal-fill" id="diaryCalFill" style="width:0%"></div></div>
 <div class="diary-cal-text" id="diaryCalText">目標：2000 kcal</div>
 </div>
-<div class="diary-calendar-section" id="diaryCalendarSection">
-<div class="diary-calendar-header">
-<div class="diary-calendar-title" id="diaryCalMonthTitle">2024年6月</div>
-<div class="diary-calendar-nav">
-<button onclick="diaryCalPrevMonth()"><i class="fas fa-chevron-left"></i></button>
-<button onclick="diaryCalToday()" style="font-size:11px;width:auto;padding:0 8px;">今天</button>
-<button onclick="diaryCalNextMonth()"><i class="fas fa-chevron-right"></i></button>
+<div class="diary-water-section" id="diaryWaterSection">
+<div class="diary-water-header">
+<div class="diary-water-title"><i class="fas fa-tint"></i> 流質攝取</div>
+<div class="diary-water-remaining" id="diaryWaterRemaining">仲差 2000 ml</div>
 </div>
+<div class="diary-water-body">
+<button class="diary-water-btn" onclick="adjustWater(-250)">−</button>
+<div class="diary-water-display">
+<input type="number" class="diary-water-amount" id="diaryWaterAmount" value="0" min="0" step="50" onchange="setWaterDirect()" onfocus="this.select()">
+<div class="diary-water-unit">毫升 (ml)</div>
 </div>
-<div class="diary-calendar-weekdays">
-<div class="diary-calendar-weekday">日</div>
-<div class="diary-calendar-weekday">一</div>
-<div class="diary-calendar-weekday">二</div>
-<div class="diary-calendar-weekday">三</div>
-<div class="diary-calendar-weekday">四</div>
-<div class="diary-calendar-weekday">五</div>
-<div class="diary-calendar-weekday">六</div>
+<button class="diary-water-btn" onclick="adjustWater(250)">+</button>
 </div>
-<div class="diary-calendar-grid" id="diaryCalendarGrid"></div>
-<div class="diary-calendar-legend">
-<div class="diary-calendar-legend-item"><div class="dot met"></div>達標</div>
-<div class="diary-calendar-legend-item"><div class="dot partial"></div>部分達標</div>
-<div class="diary-calendar-legend-item"><div class="dot missed"></div>未達標</div>
-<div class="diary-calendar-legend-item"><div class="dot nodata"></div>無記錄</div>
+<div class="diary-water-bar"><div class="diary-water-bar-fill" id="diaryWaterBarFill" style="width:0%"></div></div>
 </div>
+<div class="diary-alcohol-section" id="diaryAlcoholSection">
+<div class="diary-alcohol-left">
+<i class="fas fa-wine-glass-alt"></i>
+<span class="diary-alcohol-label">今日飲酒</span>
+</div>
+<button class="diary-alcohol-toggle" id="diaryAlcoholToggle" onclick="toggleAlcohol()">
+<div class="toggle-knob"></div>
+</button>
+</div>
+<div class="diary-stats-section" id="diaryStatsSection">
+<div class="diary-stats-title"><i class="fas fa-chart-bar"></i> 統計數據</div>
+<div class="diary-stats-grid" id="diaryStatsGrid"></div>
 </div>
 <div id="diaryMealSections"></div>
 <div class="diary-goal-section">
@@ -670,6 +678,10 @@ service cloud.firestore {
 <div class="diary-goal-row">
 <div class="diary-goal-input"><label>脂肪 (g)</label><input type="number" id="goalFat" value="65" onchange="saveDiaryGoals()"></div>
 <div class="diary-goal-input"><label>碳水 (g)</label><input type="number" id="goalCarbs" value="300" onchange="saveDiaryGoals()"></div>
+</div>
+<div class="diary-goal-row">
+<div class="diary-goal-input"><label>流質 (ml)</label><input type="number" id="goalWater" value="2000" onchange="saveDiaryGoals()"></div>
+<div class="diary-goal-input"><label>&nbsp;</label><div style="font-size:11px;color:var(--text-muted);padding:10px 0;">每250ml = 1杯</div></div>
 </div>
 </div>
 </div>
@@ -4440,7 +4452,7 @@ document.addEventListener('DOMContentLoaded', async () => {
          renderFoodSourceDropdown();
         }
         await saveDiaryData();
-        if (_currentTab === 'diary') { renderDiary(); renderDiaryCalendar(); }
+        if (_currentTab === 'diary') { renderDiary(); }
        }
       } catch (err) {
        console.log('Auto-sync skipped:', err.message);
@@ -4819,7 +4831,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('.header-title').textContent = '飲食日記';
     document.querySelector('.header-subtitle').textContent = 'Food Diary';
     renderDiary();
-    renderDiaryCalendar();
    }
    adjustMainPadding();
   }
@@ -4827,7 +4838,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ===== Food Diary ===== */
   var _diaryDate = new Date();
   var _diaryData = {}; // { 'YYYY-MM-DD': { meals: { breakfast:[], lunch:[], dinner:[], snack:[] } } }
-  var _diaryGoals = { calories: 2000, protein: 60, fat: 65, carbs: 300 };
+  var _diaryGoals = { calories: 2000, protein: 60, fat: 65, carbs: 300, water: 2000 };
   var _diaryMeals = [
    { key: 'breakfast', name: '早餐', emoji: '🌅' },
    { key: 'lunch', name: '午餐', emoji: '☀️' },
@@ -4851,8 +4862,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function _getDayData(dateKey) {
    if (!_diaryData[dateKey]) {
-    _diaryData[dateKey] = { meals: { breakfast:[], lunch:[], dinner:[], snack:[] } };
+    _diaryData[dateKey] = { meals: { breakfast:[], lunch:[], dinner:[], snack:[] }, water: 0, alcohol: false };
    }
+   // Ensure water/alcohol fields exist for old data
+   if (_diaryData[dateKey].water == null) _diaryData[dateKey].water = 0;
+   if (_diaryData[dateKey].alcohol == null) _diaryData[dateKey].alcohol = false;
    return _diaryData[dateKey];
   }
 
@@ -4995,6 +5009,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     html += '</div>';
    });
    document.getElementById('diaryMealSections').innerHTML = html;
+   // Water tracker
+   var dayData = _getDayData(dateKey);
+   document.getElementById('diaryWaterAmount').value = dayData.water || 0;
+   var waterGoal = _diaryGoals.water || 2000;
+   var waterPct = waterGoal > 0 ? Math.min(100, ((dayData.water || 0) / waterGoal) * 100) : 0;
+   document.getElementById('diaryWaterBarFill').style.width = waterPct + '%';
+   var waterRemain = Math.max(0, waterGoal - (dayData.water || 0));
+   document.getElementById('diaryWaterRemaining').textContent = waterRemain > 0 ? '仲差 ' + waterRemain + ' ml' : '✓ 已達標';
+   if (waterRemain <= 0) document.getElementById('diaryWaterRemaining').style.color = '#22c55e';
+   else document.getElementById('diaryWaterRemaining').style.color = '';
+   // Alcohol toggle
+   var alcToggle = document.getElementById('diaryAlcoholToggle');
+   if (dayData.alcohol) alcToggle.classList.add('active');
+   else alcToggle.classList.remove('active');
+   // Water goal input
+   document.getElementById('goalWater').value = _diaryGoals.water || 2000;
+   // Stats
+   renderDiaryStats();
   }
 
   /* --- Diary Add Food --- */
@@ -5152,7 +5184,6 @@ document.addEventListener('DOMContentLoaded', async () => {
    day.meals[_diaryAddingMeal].push(entry);
    closeDiaryServing();
    renderDiary();
-   renderDiaryCalendar();
    saveDiaryData();
    showToast('已加入' + _diaryMeals.find(function(m){return m.key===_diaryAddingMeal;}).name);
   }
@@ -5173,7 +5204,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     closeConfirmModal();
     renderDiary();
-    renderDiaryCalendar();
     saveDiaryData();
     showToast('已刪除');
    };
@@ -5260,7 +5290,6 @@ document.addEventListener('DOMContentLoaded', async () => {
    }
    closeDiaryEditEntry();
    renderDiary();
-   renderDiaryCalendar();
    saveDiaryData();
    showToast('已更新');
   }
@@ -5304,9 +5333,9 @@ document.addEventListener('DOMContentLoaded', async () => {
    _diaryGoals.protein = parseInt(document.getElementById('goalProtein').value) || 60;
    _diaryGoals.fat = parseInt(document.getElementById('goalFat').value) || 65;
    _diaryGoals.carbs = parseInt(document.getElementById('goalCarbs').value) || 300;
+   _diaryGoals.water = parseInt(document.getElementById('goalWater').value) || 2000;
    saveDiaryData();
    renderDiary();
-   renderDiaryCalendar();
   }
 
   /* === Food Source Management === */
@@ -5401,93 +5430,112 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
 
-  /* === Tracking Calendar === */
-  var _diaryCalMonth = new Date();
-  _diaryCalMonth.setDate(1);
-
-  function diaryCalPrevMonth() {
-   _diaryCalMonth.setMonth(_diaryCalMonth.getMonth() - 1);
-   renderDiaryCalendar();
-  }
-  function diaryCalNextMonth() {
-   _diaryCalMonth.setMonth(_diaryCalMonth.getMonth() + 1);
-   renderDiaryCalendar();
-  }
-  function diaryCalToday() {
-   _diaryCalMonth = new Date();
-   _diaryCalMonth.setDate(1);
-   _diaryDate = new Date();
+  /* === Water Tracker === */
+  function adjustWater(amount) {
+   var dateKey = _diaryKey(_diaryDate);
+   var dayData = _getDayData(dateKey);
+   dayData.water = Math.max(0, (dayData.water || 0) + amount);
    renderDiary();
-   renderDiaryCalendar();
+   saveDiaryData();
   }
-  function renderDiaryCalendar() {
-   var year = _diaryCalMonth.getFullYear();
-   var month = _diaryCalMonth.getMonth();
-   var titleEl = document.getElementById('diaryCalMonthTitle');
-   if (titleEl) titleEl.textContent = year + '年' + (month + 1) + '月';
-   var firstDay = new Date(year, month, 1).getDay(); // 0=Sun
-   var daysInMonth = new Date(year, month + 1, 0).getDate();
+  function setWaterDirect() {
+   var dateKey = _diaryKey(_diaryDate);
+   var dayData = _getDayData(dateKey);
+   var val = parseInt(document.getElementById('diaryWaterAmount').value) || 0;
+   dayData.water = Math.max(0, val);
+   renderDiary();
+   saveDiaryData();
+  }
+
+  /* === Alcohol Toggle === */
+  function toggleAlcohol() {
+   var dateKey = _diaryKey(_diaryDate);
+   var dayData = _getDayData(dateKey);
+   dayData.alcohol = !dayData.alcohol;
+   renderDiary();
+   saveDiaryData();
+  }
+
+  /* === Diary Stats === */
+  function renderDiaryStats() {
+   var grid = document.getElementById('diaryStatsGrid');
+   if (!grid) return;
    var today = new Date();
    var todayKey = _diaryKey(today);
-   var grid = document.getElementById('diaryCalendarGrid');
-   if (!grid) return;
-   var html = '';
-   // Empty cells before first day
-   for (var e = 0; e < firstDay; e++) {
-    html += '<div class="diary-calendar-day empty"></div>';
-   }
-   for (var d = 1; d <= daysInMonth; d++) {
-    var dateObj = new Date(year, month, d);
-    var dk = _diaryKey(dateObj);
-    var isToday = dk === todayKey;
-    var dayData = _diaryData[dk];
-    var hasData = false;
+   // Collect all days with data
+   var allKeys = Object.keys(_diaryData).sort();
+   var daysWithFood = 0;
+   var totalCalDays = 0;
+   var totalProteinDays = 0;
+   var calMetCount = 0;
+   var proteinMetCount = 0;
+   var bothMetCount = 0;
+   var alcoholDays = [];
+   allKeys.forEach(function(dk) {
+    var d = _diaryData[dk];
+    if (!d || !d.meals) return;
+    var hasFood = false;
     var totals = {calories:0, protein:0};
-    if (dayData && dayData.meals) {
-     var meals = dayData.meals;
-     ['breakfast','lunch','dinner','snack'].forEach(function(mk) {
-      if (meals[mk]) {
-       meals[mk].forEach(function(entry) {
-        hasData = true;
-        if (entry.nutrition) {
-         totals.calories += entry.nutrition.calories || 0;
-         totals.protein += entry.nutrition.protein || 0;
-        }
-       });
-      }
-     });
-    }
-    var cls = 'diary-calendar-day';
-    if (isToday) cls += ' today';
-    if (hasData) {
-     var calOk = totals.calories <= _diaryGoals.calories;
+    ['breakfast','lunch','dinner','snack'].forEach(function(mk) {
+     if (d.meals[mk]) {
+      d.meals[mk].forEach(function(entry) {
+       hasFood = true;
+       if (entry.nutrition) {
+        totals.calories += entry.nutrition.calories || 0;
+        totals.protein += entry.nutrition.protein || 0;
+       }
+      });
+     }
+    });
+    if (hasFood) {
+     daysWithFood++;
+     totalCalDays += totals.calories;
+     totalProteinDays += totals.protein;
+     var calOk = totals.calories > 0 && totals.calories <= _diaryGoals.calories;
      var proOk = totals.protein >= _diaryGoals.protein;
-     if (calOk && proOk) cls += ' goal-met';
-     else if (calOk || proOk) cls += ' goal-partial';
-     else cls += ' goal-missed';
+     if (calOk) calMetCount++;
+     if (proOk) proteinMetCount++;
+     if (calOk && proOk) bothMetCount++;
     }
-    html += '<div class="' + cls + '" onclick="diaryCalSelectDay(' + year + ',' + month + ',' + d + ')">';
-    html += '<span class="day-num">' + d + '</span>';
-    html += '</div>';
+    if (d.alcohol) alcoholDays.push(dk);
+   });
+   // Average calorie and protein
+   var avgCal = daysWithFood > 0 ? Math.round(totalCalDays / daysWithFood) : 0;
+   var avgProtein = daysWithFood > 0 ? Math.round(totalProteinDays / daysWithFood) : 0;
+   // Alcohol frequency
+   var alcFreqText = '--';
+   if (alcoholDays.length >= 2) {
+    // Calculate average days between drinking
+    alcoholDays.sort();
+    var totalGap = 0;
+    for (var i = 1; i < alcoholDays.length; i++) {
+     var d1 = new Date(alcoholDays[i-1]);
+     var d2 = new Date(alcoholDays[i]);
+     totalGap += Math.round((d2 - d1) / 86400000);
+    }
+    var avgGap = Math.round(totalGap / (alcoholDays.length - 1));
+    alcFreqText = '每 ' + avgGap + ' 日';
+   } else if (alcoholDays.length === 1) {
+    alcFreqText = '只有1次';
+   } else {
+    alcFreqText = '未有記錄';
    }
+   var html = '';
+   html += '<div class="diary-stat-card"><div class="diary-stat-value">' + daysWithFood + '</div><div class="diary-stat-label">記錄日數</div></div>';
+   html += '<div class="diary-stat-card"><div class="diary-stat-value ' + (bothMetCount > 0 ? 'good' : '') + '">' + bothMetCount + '/' + daysWithFood + '</div><div class="diary-stat-label">卡+蛋白達標</div></div>';
+   html += '<div class="diary-stat-card"><div class="diary-stat-value">' + avgCal + '</div><div class="diary-stat-label">平均卡路里</div></div>';
+   html += '<div class="diary-stat-card"><div class="diary-stat-value">' + avgProtein + 'g</div><div class="diary-stat-label">平均蛋白質</div></div>';
+   html += '<div class="diary-stat-card"><div class="diary-stat-value ' + (calMetCount > 0 ? 'good' : '') + '">' + calMetCount + '/' + daysWithFood + '</div><div class="diary-stat-label">卡路里達標</div></div>';
+   html += '<div class="diary-stat-card"><div class="diary-stat-value ' + (proteinMetCount > 0 ? 'good' : '') + '">' + proteinMetCount + '/' + daysWithFood + '</div><div class="diary-stat-label">蛋白質達標</div></div>';
+   html += '<div class="diary-stat-card"><div class="diary-stat-value">' + alcoholDays.length + '</div><div class="diary-stat-label">飲酒日數</div></div>';
+   html += '<div class="diary-stat-card"><div class="diary-stat-value warn">' + alcFreqText + '</div><div class="diary-stat-label">平均飲酒頻率</div></div>';
    grid.innerHTML = html;
-  }
-  function diaryCalSelectDay(y, m, d) {
-   _diaryDate = new Date(y, m, d);
-   renderDiary();
-   renderDiaryCalendar();
   }
 
   /* === Init: load food sources === */
   (async function initFoodSources() {
    await loadFoodSources();
    renderFoodSourceDropdown();
-  })();
-  // Initial calendar render
-  (function() {
-   _diaryCalMonth = new Date();
-   _diaryCalMonth.setDate(1);
-   setTimeout(function(){ renderDiaryCalendar(); }, 100);
   })();
 
 </script>
