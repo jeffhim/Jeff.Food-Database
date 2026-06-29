@@ -352,6 +352,12 @@ to{transform:rotate(360deg);}
 .diary-food-item-name{font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .diary-food-item-meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
 .diary-food-item-cal{font-size:13px;color:var(--cal-color);font-weight:600;white-space:nowrap;}
+.diary-recent-header{font-size:11px;font-weight:600;color:var(--text-muted);padding:8px 14px 4px;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;}
+.diary-recent-header i{font-size:10px;color:var(--accent);}
+.diary-results-divider{height:1px;background:var(--accent);opacity:0.2;margin:4px 14px;}
+.diary-food-item.recent-item{background:rgba(34,197,94,0.04);}
+.dark .diary-food-item.recent-item{background:rgba(34,197,94,0.06);}
+.diary-food-item.recent-item:hover{background:rgba(34,197,94,0.1);}
 .diary-serving-modal{padding:20px;}
 .diary-serving-row{display:flex;align-items:center;gap:12px;margin-top:16px;}
 .diary-serving-input{flex:1;padding:14px 16px;border:2px solid var(--divider);border-radius:14px;font-size:16px;background:var(--bg-primary);color:var(--text-primary);outline:none;font-family:inherit;text-align:center;transition:border-color 0.2s;}
@@ -982,12 +988,12 @@ service cloud.firestore {
 </div>
 <div class="diary-serving-row" id="diaryServingCountRow">
 <label style="font-size:14px;color:var(--text-secondary);font-weight:500;">份數</label>
-<input type="number" step="0.1" min="0.1" value="1" class="diary-serving-input" id="diaryServingCount" oninput="updateDiaryPreview()" style="max-width:100px;">
+<input type="number" step="0.1" min="0.1" value="1" class="diary-serving-input" id="diaryServingCount" oninput="updateDiaryPreview()" onfocus="this.select()" style="max-width:100px;">
 <span class="diary-serving-unit" id="diaryServingWeightInfo"></span>
 </div>
 <div class="diary-serving-row" id="diaryGramsRow" style="display:none;">
 <label style="font-size:14px;color:var(--text-secondary);font-weight:500;">重量</label>
-<input type="number" step="1" min="1" value="100" class="diary-serving-input" id="diaryGramsInput" oninput="updateDiaryPreview()" style="max-width:100px;">
+<input type="number" step="1" min="1" value="100" class="diary-serving-input" id="diaryGramsInput" oninput="updateDiaryPreview()" onfocus="this.select()" style="max-width:100px;">
 <span class="diary-serving-unit">克 (g)</span>
 </div>
 <div class="diary-preview-nutrition" id="diaryPreviewNutrition"></div>
@@ -1012,12 +1018,12 @@ service cloud.firestore {
 </div>
 <div class="diary-serving-row" id="diaryEditServingRow">
 <label style="font-size:14px;color:var(--text-secondary);font-weight:500;">份數</label>
-<input type="number" step="0.1" min="0.1" value="1" class="diary-serving-input" id="diaryEditServingCount" oninput="updateDiaryEditPreview()" style="max-width:100px;">
+<input type="number" step="0.1" min="0.1" value="1" class="diary-serving-input" id="diaryEditServingCount" oninput="updateDiaryEditPreview()" onfocus="this.select()" style="max-width:100px;">
 <span class="diary-serving-unit" id="diaryEditWeightInfo"></span>
 </div>
 <div class="diary-serving-row" id="diaryEditGramsRow" style="display:none;">
 <label style="font-size:14px;color:var(--text-secondary);font-weight:500;">重量</label>
-<input type="number" step="1" min="1" value="100" class="diary-serving-input" id="diaryEditGramsInput" oninput="updateDiaryEditPreview()" style="max-width:100px;">
+<input type="number" step="1" min="1" value="100" class="diary-serving-input" id="diaryEditGramsInput" oninput="updateDiaryEditPreview()" onfocus="this.select()" style="max-width:100px;">
 <span class="diary-serving-unit">克 (g)</span>
 </div>
 <div class="diary-preview-nutrition" id="diaryEditPreviewNutrition"></div>
@@ -5050,38 +5056,75 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('foodName').value = searchVal;
    }
   }
+  function _renderFoodItem(f, extraClass) {
+   var cal = '--';
+   if (f.perServing && f.perServing.calories != null) {
+    cal = Math.round(f.perServing.calories) + ' kcal/份';
+   } else if (f.per100g && f.per100g.calories != null) {
+    cal = Math.round(f.per100g.calories) + ' kcal/100g';
+   }
+   var catEmoji = categoryEmojis[f.category] || '';
+   return '<div class="diary-food-item' + (extraClass ? ' ' + extraClass : '') + '" onclick="selectDiaryFood(\'' + f.id + '\')">' +
+    '<div class="diary-food-item-info">' +
+    '<div class="diary-food-item-name">' + (catEmoji ? catEmoji + ' ' : '') + _esc(f.name) + '</div>' +
+    '<div class="diary-food-item-meta">' + _esc(f.category) + (f.brand ? ' · ' + _esc(f.brand) : '') + '</div>' +
+    '</div>' +
+    '<div class="diary-food-item-cal">' + cal + '</div>' +
+    '</div>';
+  }
+
+  function _getRecentFoodsForMeal(mealKey) {
+   // Collect unique food IDs from this meal type across all days, most recent first
+   var allKeys = Object.keys(_diaryData).sort().reverse();
+   var seen = {};
+   var recentFoodIds = [];
+   allKeys.forEach(function(dk) {
+    var d = _diaryData[dk];
+    if (!d || !d.meals || !d.meals[mealKey]) return;
+    d.meals[mealKey].forEach(function(entry) {
+     if (entry.foodId && !seen[entry.foodId]) {
+      seen[entry.foodId] = true;
+      recentFoodIds.push(entry.foodId);
+     }
+    });
+   });
+   // Map to actual food objects (they may have been deleted)
+   return recentFoodIds.slice(0, 10).map(function(id) {
+    return foods.find(function(f) { return f.id === id; });
+   }).filter(Boolean);
+  }
+
   function filterDiaryFoods() {
    var term = (document.getElementById('diaryFoodSearchInput').value || '').toLowerCase();
-   var filtered = foods;
-   if (term) {
-    filtered = foods.filter(function(f) {
-     return f.name.toLowerCase().indexOf(term) >= 0 ||
-      (f.nameEn && f.nameEn.toLowerCase().indexOf(term) >= 0) ||
-      (f.brand && f.brand.toLowerCase().indexOf(term) >= 0) ||
-      f.category.toLowerCase().indexOf(term) >= 0;
-    });
-   }
    var container = document.getElementById('diaryFoodResults');
+   // If no search term, show recent foods for this meal
+   if (!term) {
+    var recentFoods = _getRecentFoodsForMeal(_diaryAddingMeal);
+    if (recentFoods.length > 0) {
+     var mealName = '';
+     _diaryMeals.forEach(function(m) { if (m.key === _diaryAddingMeal) mealName = m.name; });
+     var html = '<div class="diary-recent-header"><i class="fas fa-history"></i> ' + mealName + ' 常食記錄</div>';
+     html += recentFoods.map(function(f) { return _renderFoodItem(f, 'recent-item'); }).join('');
+     html += '<div class="diary-results-divider"></div>';
+     html += '<div class="diary-recent-header"><i class="fas fa-list"></i> 所有食物</div>';
+     html += foods.slice(0, 40).map(function(f) { return _renderFoodItem(f, ''); }).join('');
+     container.innerHTML = html;
+    } else {
+     container.innerHTML = foods.slice(0, 50).map(function(f) { return _renderFoodItem(f, ''); }).join('');
+    }
+    return;
+   }
+   var filtered = foods.filter(function(f) {
+    return f.name.toLowerCase().indexOf(term) >= 0 ||
+     (f.nameEn && f.nameEn.toLowerCase().indexOf(term) >= 0 ||
+     (f.brand && f.brand.toLowerCase().indexOf(term) >= 0) ||
+     f.category.toLowerCase().indexOf(term) >= 0);
+   });
    if (filtered.length === 0) {
     container.innerHTML = '<div class="diary-empty"><i class="fas fa-search"></i>搵唔到食物<br><span style="font-size:13px;margin-top:6px;display:inline-block;">可以點擊下方按鈕新增</span></div>';
     return;
    }
-   container.innerHTML = filtered.slice(0, 50).map(function(f) {
-    var cal = '--';
-    if (f.perServing && f.perServing.calories != null) {
-     cal = Math.round(f.perServing.calories) + ' kcal/份';
-    } else if (f.per100g && f.per100g.calories != null) {
-     cal = Math.round(f.per100g.calories) + ' kcal/100g';
-    }
-    var catEmoji = categoryEmojis[f.category] || '';
-    return '<div class="diary-food-item" onclick="selectDiaryFood(\'' + f.id + '\')">' +
-     '<div class="diary-food-item-info">' +
-     '<div class="diary-food-item-name">' + (catEmoji ? catEmoji + ' ' : '') + _esc(f.name) + '</div>' +
-     '<div class="diary-food-item-meta">' + _esc(f.category) + (f.brand ? ' · ' + _esc(f.brand) : '') + '</div>' +
-     '</div>' +
-     '<div class="diary-food-item-cal">' + cal + '</div>' +
-     '</div>';
-   }).join('');
+   container.innerHTML = filtered.slice(0, 50).map(function(f) { return _renderFoodItem(f, ''); }).join('');
   }
 
   function selectDiaryFood(foodId) {
