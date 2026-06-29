@@ -322,6 +322,7 @@ to{transform:rotate(360deg);}
 .barcode-field-row{display:flex;gap:8px;align-items:center;}
 .barcode-field-row input{flex:1;}
 .barcode-field-row button{flex-shrink:0;}
+#barcodeScannerModal{z-index:250;}
 #barcodeScannerModal .modal{max-width:420px;}
 #barcodeScannerRegion{width:100%;min-height:250px;border-radius:12px;overflow:hidden;background:#000;}
 #barcodeScannerRegion video{border-radius:12px;}
@@ -1021,12 +1022,16 @@ service cloud.firestore {
 <div class="diary-food-search">
 <i class="fas fa-search"></i>
 <input type="text" id="diaryFoodSearchInput" placeholder="搜尋食物..." oninput="filterDiaryFoods()">
-<button type="button" class="barcode-scan-btn small" onclick="scanBarcodeForDiary()" style="margin-left:4px;"><i class="fas fa-barcode"></i></button>
 </div>
 <div class="diary-food-result" id="diaryFoodResults" style="order:-1;"></div>
-<button type="button" class="diary-create-food-btn" onclick="openCreateFoodFromDiary()">
-<i class="fas fa-plus"></i> 新增食物到資料庫
+<div style="display:flex;gap:8px;margin-top:8px;">
+<button type="button" class="diary-create-food-btn" style="margin-top:0;" onclick="openCreateFoodFromDiary()">
+<i class="fas fa-plus"></i> 新增食物
 </button>
+<button type="button" class="diary-create-food-btn" style="margin-top:0;background:linear-gradient(135deg,#f59e0b,#f97316);" onclick="scanBarcodeForDiary()">
+<i class="fas fa-barcode"></i> 掃描
+</button>
+</div>
 <button type="button" class="diary-quick-entry-btn" onclick="openQuickNutritionEntry()">
 <i class="fas fa-keyboard"></i> 直接輸入營養
 </button>
@@ -5850,6 +5855,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Scan in diary add-food modal to find matching food
   function scanBarcodeForDiary() {
    _barcodeScanMode = 'diary';
+   closeDiaryAddFood();
    _startBarcodeScanner(function(code) {
     var matched = foods.find(function(f) { return f.barcode === code; });
     if (matched) {
@@ -5857,7 +5863,8 @@ document.addEventListener('DOMContentLoaded', async () => {
      selectDiaryFood(matched.id);
     } else {
      showToast('搵唔到條碼 ' + code + ' 對應嘅食物');
-     // Put the barcode in search to show no results
+     // Reopen diary add food and show barcode in search
+     openDiaryAddFood(_diaryAddingMeal);
      document.getElementById('diaryFoodSearchInput').value = code;
      filterDiaryFoods();
     }
