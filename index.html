@@ -9,21 +9,21 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="營養資料庫">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#166534">
+<meta name="theme-color" content="#FF7E67">
 <meta name="description" content="個人營養資料庫 - 記錄和管理食物營養資訊">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Noto+Sans+HK:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
-:root{--bg-primary:#f0f2f5;--bg-secondary:#ffffff;--bg-card:#ffffff;--text-primary:#1a1a2e;--text-secondary:#6b7280;--text-muted:#9ca3af;--accent:#22c55e;--accent-dark:#16a34a;--header-gradient:linear-gradient(135deg,#166534 0%,#15803d 50%,#22c55e 100%);--divider:rgba(0,0,0,0.06);--card-shadow:0 2px 8px rgba(0,0,0,0.06);--pill-bg:#e5e7eb;--pill-active:#22c55e;--search-bg:rgba(255,255,255,0.15);--cal-color:#a855f7;--protein-color:#eab308;--fat-color:#f97316;--carbs-color:#06b6d4;--sodium-color:#ec4899;--calcium-color:#22c55e;--sugar-color:#ec4899;--fiber-color:#10b981;}
-.dark{--bg-primary:#0f0f1a;--bg-secondary:#1a1a2e;--bg-card:#252542;--text-primary:#ffffff;--text-secondary:#9ca3af;--text-muted:#6b7280;--divider:rgba(255,255,255,0.08);--card-shadow:0 4px 12px rgba(0,0,0,0.3);--pill-bg:#374151;--search-bg:rgba(255,255,255,0.1);}
+:root{--bg-primary:#FFF5EE;--bg-secondary:#FFFFFF;--bg-card:#FFFFFF;--text-primary:#3D2B1F;--text-secondary:#8B7355;--text-muted:#B8A495;--accent:#FF7E67;--accent-dark:#E96651;--header-gradient:linear-gradient(135deg,#FF7B6B 0%,#FF9080 50%,#FFAB91 100%);--divider:rgba(61,43,31,0.07);--card-shadow:0 2px 12px rgba(139,90,60,0.06);--pill-bg:#F5E6D8;--pill-active:#FF7E67;--search-bg:rgba(255,255,255,0.2);--cal-color:#E8758A;--protein-color:#F0A830;--fat-color:#F08040;--carbs-color:#45B5AA;--sodium-color:#D070B0;--calcium-color:#70C078;--sugar-color:#E8758A;--fiber-color:#70C078;}
+.dark{--bg-primary:#1C1512;--bg-secondary:#2A221E;--bg-card:#382E29;--text-primary:#F5E8DE;--text-secondary:#A89080;--text-muted:#7A6B5E;--divider:rgba(245,232,222,0.08);--card-shadow:0 4px 12px rgba(0,0,0,0.3);--pill-bg:#4A3F38;--search-bg:rgba(255,255,255,0.1);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html{min-height:100%;overflow-x:hidden;}
-body{font-family:'Noto Sans HK',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100%;min-height:100dvh;padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);}
+body{font-family:'Nunito','Noto Sans HK',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100%;min-height:100dvh;padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);}
 @media all and (display-mode:standalone){.header{padding-top:calc(4px + env(safe-area-inset-top));}
 .fab{bottom:calc(30px + env(safe-area-inset-bottom));}
 .modal{padding-bottom:env(safe-area-inset-bottom);}
@@ -51,7 +51,7 @@ body{font-family:'Noto Sans HK',-apple-system,BlinkMacSystemFont,sans-serif;back
 .category-pill:hover{transform:scale(1.02);}
 .category-pill .emoji{font-size:16px;}
 .food-list{display:flex;flex-direction:column;gap:16px;}
-.food-card{background:var(--bg-card);border-radius:20px;padding:20px;box-shadow:var(--card-shadow);animation:slideIn 0.3s ease;}
+.food-card{background:var(--bg-card);border-radius:22px;padding:20px;box-shadow:var(--card-shadow);animation:slideIn 0.3s ease;border:1px solid rgba(255,126,103,0.06);}
 @keyframes slideIn{from{opacity:0;transform:translateY(10px);}
 to{opacity:1;transform:translateY(0);}
 }
@@ -68,11 +68,11 @@ to{opacity:1;transform:translateY(0);}
 .action-icon-btn.delete:hover{color:#ef4444;}
 .nutrition-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;cursor:pointer;transition:transform 0.15s ease;}
 .nutrition-grid:active{transform:scale(0.98);}
-.nutrition-mode-tag{display:inline-flex;align-items:center;gap:5px;color:var(--text-secondary);font-size:13px;background:rgba(34,197,94,0.15);padding:4px 10px;border-radius:12px;transition:all 0.2s;}
-.dark .nutrition-mode-tag{background:rgba(34,197,94,0.2);}
+.nutrition-mode-tag{display:inline-flex;align-items:center;gap:5px;color:var(--text-secondary);font-size:13px;background:rgba(255,126,103,0.15);padding:4px 10px;border-radius:12px;transition:all 0.2s;}
+.dark .nutrition-mode-tag{background:rgba(255,126,103,0.2);}
 .nutrition-mode-tag i{font-size:11px;color:var(--accent);}
-.nutrition-mode-tag.per100g{background:rgba(168,85,247,0.15);}
-.dark .nutrition-mode-tag.per100g{background:rgba(168,85,247,0.2);}
+.nutrition-mode-tag.per100g{background:rgba(192,132,212,0.15);}
+.dark .nutrition-mode-tag.per100g{background:rgba(192,132,212,0.2);}
 .nutrition-mode-tag.per100g i{color:var(--cal-color);}
 .nutrition-mode-tag.perserving{background:rgba(59,130,246,0.15);}
 .dark .nutrition-mode-tag.perserving{background:rgba(59,130,246,0.2);}
@@ -90,12 +90,12 @@ to{opacity:1;transform:translateY(0);}
 .nutrition-box.fiber .nutrition-value{color:var(--fiber-color);}
 .food-footer{margin-top:16px;padding-top:12px;border-top:1px solid var(--divider);display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:12px;}
 .food-footer i{font-size:14px;}
-.fab{position:fixed;bottom:80px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--accent);color:white;border:none;box-shadow:0 6px 20px rgba(34,197,94,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;z-index:9999;transition:box-shadow 0.2s ease;contain:layout;}
-.fab:hover{box-shadow:0 8px 25px rgba(34,197,94,0.5);}
+.fab{position:fixed;bottom:80px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--accent);color:white;border:none;box-shadow:0 6px 20px rgba(255,126,103,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;z-index:9999;transition:box-shadow 0.2s ease;contain:layout;}
+.fab:hover{box-shadow:0 8px 25px rgba(255,126,103,0.5);}
 .fab:active{}
 .scroll-top-btn{position:fixed;bottom:150px;right:24px;width:44px;height:44px;border-radius:50%;background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--divider);box-shadow:var(--card-shadow);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:18px;z-index:9998;transition:opacity 0.2s;}
 .scroll-top-btn.show{display:flex;}
-.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:200;animation:fadeIn 0.2s ease;}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(40,25,15,0.55);z-index:200;animation:fadeIn 0.2s ease;}
 .modal-overlay.active{display:flex;align-items:flex-end;justify-content:center;}
 @keyframes fadeIn{from{opacity:0;}
 to{opacity:1;}
@@ -121,11 +121,11 @@ to{transform:translateY(0);}
 .input-mode-btn:not(.active):hover{background:var(--divider);}
 .serving-weight-group{transition:opacity 0.2s,max-height 0.3s;overflow:hidden;}
 .serving-weight-group.hidden{opacity:0.4;pointer-events:none;}
-.scan-label-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px 16px;background:linear-gradient(135deg,#8b5cf6 0%,#a855f7 100%);color:white;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:20px;transition:all 0.2s;font-family:inherit;}
-.scan-label-btn:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(139,92,246,0.4);}
+.scan-label-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px 16px;background:linear-gradient(135deg,#C084D4 0%,#D4A0E0 100%);color:white;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:20px;transition:all 0.2s;font-family:inherit;}
+.scan-label-btn:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(192,132,212,0.4);}
 .scan-label-btn:active{transform:scale(0.98);}
 .scan-label-btn i{font-size:18px;}
-.scan-label-btn.scanning{background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);pointer-events:none;}
+.scan-label-btn.scanning{background:linear-gradient(135deg,#B070C4 0%,#C084D4 100%);pointer-events:none;}
 .scan-label-btn.scanning i{animation:spin 1s linear infinite;}
 @keyframes spin{from{transform:rotate(0deg);}
 to{transform:rotate(360deg);}
@@ -136,7 +136,7 @@ to{transform:rotate(360deg);}
 .scan-preview-remove{position:absolute;top:8px;right:8px;width:28px;height:28px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;}
 .scan-status{text-align:center;padding:12px;background:var(--bg-primary);border-radius:10px;margin-bottom:16px;font-size:14px;color:var(--text-secondary);display:none;}
 .scan-status.show{display:block;}
-.scan-status.success{background:rgba(34,197,94,0.15);color:var(--accent);}
+.scan-status.success{background:rgba(255,126,103,0.15);color:var(--accent);}
 .scan-status.error{background:rgba(239,68,68,0.15);color:#ef4444;}
 .cloud-sync-section{background:var(--bg-card);border-radius:16px;padding:20px;margin-bottom:20px;}
 .cloud-sync-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
@@ -145,14 +145,14 @@ to{transform:rotate(360deg);}
 .cloud-url-input:focus{border-color:var(--accent);}
 .cloud-btn-row{display:flex;gap:10px;margin-bottom:12px;}
 .cloud-btn{flex:1;padding:14px 16px;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;transition:all 0.2s;}
-.cloud-btn.upload{background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:white;}
-.cloud-btn.download{background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:white;}
+.cloud-btn.upload{background:linear-gradient(135deg,#6CA6E8 0%,#5090D8 100%);color:white;}
+.cloud-btn.download{background:linear-gradient(135deg,#81C784 0%,#66BB6A 100%);color:white;}
 .cloud-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.2);}
 .cloud-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
 .cloud-btn.loading i{animation:spin 1s linear infinite;}
 .cloud-status{text-align:center;padding:10px;border-radius:10px;font-size:13px;margin-bottom:12px;display:none;}
 .cloud-status.show{display:block;}
-.cloud-status.success{background:rgba(34,197,94,0.15);color:var(--accent);}
+.cloud-status.success{background:rgba(255,126,103,0.15);color:var(--accent);}
 .cloud-status.error{background:rgba(239,68,68,0.15);color:#ef4444;}
 .cloud-status.info{background:rgba(59,130,246,0.15);color:#3b82f6;}
 .cloud-help{font-size:12px;color:var(--text-muted);line-height:1.6;padding:12px;background:var(--bg-primary);border-radius:10px;}
@@ -183,7 +183,7 @@ to{transform:rotate(360deg);}
 .settings-item-left{display:flex;align-items:center;gap:12px;}
 .settings-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;}
 .settings-icon.blue{background:#3b82f6;}
-.settings-icon.green{background:#22c55e;}
+.settings-icon.green{background:#66BB6A;}
 .settings-icon.orange{background:#f97316;}
 .settings-icon.red{background:#ef4444;}
 .settings-label{font-size:16px;}
@@ -221,8 +221,8 @@ to{transform:rotate(360deg);}
 .doc-card-meta{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-bottom:6px;}
 .doc-card-tags{display:flex;flex-wrap:wrap;gap:6px;}
 .doc-card-tag{font-size:11px;padding:3px 8px;border-radius:8px;background:var(--bg-primary);color:var(--text-secondary);}
-.doc-card-tag.food{background:rgba(34,197,94,0.12);color:var(--accent);}
-.doc-card-tag.nut{background:rgba(168,85,247,0.12);color:var(--cal-color);}
+.doc-card-tag.food{background:rgba(255,126,103,0.12);color:var(--accent);}
+.doc-card-tag.nut{background:rgba(192,132,212,0.12);color:var(--cal-color);}
 .doc-view-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;font-size:13px;margin-top:12px;}
 .doc-view-table thead th{background:var(--accent);color:white;padding:10px 8px;font-weight:600;text-align:center;white-space:nowrap;position:sticky;top:0;}
 .doc-view-table thead th:first-child{text-align:left;padding-left:12px;}
@@ -230,26 +230,26 @@ to{transform:rotate(360deg);}
 .doc-view-table tbody td:first-child{text-align:left;font-weight:600;padding-left:12px;white-space:nowrap;}
 .doc-view-table tbody tr:last-child td{border-bottom:none;}
 .doc-view-table tbody tr:nth-child(even){background:var(--bg-primary);}
-.doc-view-table tbody tr.doc-total-row{background:rgba(34,197,94,0.1);font-weight:700;}
+.doc-view-table tbody tr.doc-total-row{background:rgba(255,126,103,0.1);font-weight:700;}
 .doc-view-table tbody tr.doc-total-row td{border-top:2px solid var(--accent);}
 .food-picker-list{max-height:260px;overflow-y:auto;border:2px solid var(--divider);border-radius:12px;margin-top:8px;}
 .food-picker-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--divider);cursor:pointer;transition:background 0.15s;}
 .food-picker-item:last-child{border-bottom:none;}
 .food-picker-item:hover{background:var(--bg-primary);}
-.food-picker-item.selected{background:rgba(34,197,94,0.1);}
+.food-picker-item.selected{background:rgba(255,126,103,0.1);}
 .food-picker-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);}
 .food-picker-item-name{flex:1;font-size:14px;}
 .food-picker-item-cat{font-size:11px;color:var(--text-muted);}
 .nut-picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
 .nut-picker label{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:var(--bg-primary);cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s;border:2px solid transparent;}
-.nut-picker label.checked{border-color:var(--accent);background:rgba(34,197,94,0.1);}
+.nut-picker label.checked{border-color:var(--accent);background:rgba(255,126,103,0.1);}
 .nut-picker label input{display:none;}
 .doc-selected-foods{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:30px;}
-.doc-selected-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;background:rgba(34,197,94,0.12);color:var(--accent);font-size:12px;font-weight:500;}
+.doc-selected-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;background:rgba(255,126,103,0.12);color:var(--accent);font-size:12px;font-weight:500;}
 .doc-selected-chip button{background:none;border:none;color:var(--accent);cursor:pointer;padding:0 2px;font-size:14px;line-height:1;}
 
 /* Bottom Tab Bar */
-.bottom-tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--bg-secondary);border-top:1px solid var(--divider);display:flex;z-index:101;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 10px rgba(0,0,0,0.06);}
+.bottom-tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--bg-secondary);border-top:1px solid var(--divider);display:flex;z-index:101;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 12px rgba(139,90,60,0.08);}
 .dark .bottom-tab-bar{box-shadow:0 -2px 10px rgba(0,0,0,0.3);}
 .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0 6px;cursor:pointer;color:var(--text-muted);transition:color 0.2s;border:none;background:none;font-family:inherit;font-size:11px;font-weight:500;gap:3px;-webkit-tap-highlight-color:transparent;}
 .tab-item.active{color:var(--accent);}
@@ -309,12 +309,12 @@ to{transform:rotate(360deg);}
 .diary-stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
 .diary-stat-card{background:var(--bg-primary);border-radius:10px;padding:12px 10px;text-align:center;}
 .diary-stat-value{font-size:22px;font-weight:800;color:var(--accent);margin-bottom:2px;}
-.diary-stat-value.warn{color:#f59e0b;}
-.diary-stat-value.good{color:#22c55e;}
+.diary-stat-value.warn{color:#F0A848;}
+.diary-stat-value.good{color:#66BB6A;}
 .diary-stat-value.bad{color:#ef4444;}
 .diary-stat-label{font-size:10px;color:var(--text-muted);line-height:1.3;}
-.barcode-scan-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;}
-.barcode-scan-btn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(249,115,22,0.3);}
+.barcode-scan-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,#F0A848,#F08040);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.barcode-scan-btn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(240,128,64,0.3);}
 .barcode-scan-btn:active{transform:scale(0.97);}
 .barcode-scan-btn i{font-size:14px;}
 .barcode-scan-btn.small{padding:6px 10px;font-size:12px;border-radius:8px;}
@@ -333,7 +333,7 @@ to{transform:rotate(360deg);}
 .barcode-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(249,115,22,0.1);color:#f97316;border-radius:6px;font-size:11px;font-weight:500;font-family:'Courier New',monospace;cursor:pointer;}
 .barcode-tag i{font-size:9px;}
 .diary-quick-entry-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px 16px;margin-top:8px;background:var(--bg-primary);color:var(--accent);border:2px dashed var(--accent);border-radius:12px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.15s;}
-.diary-quick-entry-btn:hover{background:rgba(34,197,94,0.06);border-style:solid;}
+.diary-quick-entry-btn:hover{background:rgba(255,126,103,0.06);border-style:solid;}
 .diary-quick-entry-btn:active{transform:scale(0.97);}
 .diary-quick-entry-btn i{font-size:15px;}
 .quick-entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
@@ -353,7 +353,7 @@ to{transform:rotate(360deg);}
 .diary-meal-title .emoji{font-size:18px;}
 .diary-meal-kcal{font-size:13px;color:var(--text-secondary);font-weight:500;}
 .diary-meal-add{background:none;border:none;color:var(--accent);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:background 0.2s;}
-.diary-meal-add:hover{background:rgba(34,197,94,0.1);}
+.diary-meal-add:hover{background:rgba(255,126,103,0.1);}
 .diary-entry{display:flex;align-items:center;padding:12px 16px;border-top:1px solid var(--divider);gap:12px;transition:background 0.15s;}
 .diary-entry:active{background:var(--bg-primary);}
 .diary-entry-info{flex:1;min-width:0;}
@@ -364,7 +364,7 @@ to{transform:rotate(360deg);}
 .diary-entry-del:hover{color:#ef4444;}
 .diary-goal-section{background:var(--bg-card);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:var(--card-shadow);}
 .diary-goal-title{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.diary-goal-title i{color:#f59e0b;}
+.diary-goal-title i{color:#F0A848;}
 .diary-goal-row{display:flex;gap:8px;margin-bottom:8px;}
 .diary-goal-input{flex:1;}
 .diary-goal-input label{display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px;font-weight:500;}
@@ -386,9 +386,9 @@ to{transform:rotate(360deg);}
 .diary-recent-header{font-size:11px;font-weight:600;color:var(--text-muted);padding:8px 14px 4px;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;}
 .diary-recent-header i{font-size:10px;color:var(--accent);}
 .diary-results-divider{height:1px;background:var(--accent);opacity:0.2;margin:4px 14px;}
-.diary-food-item.recent-item{background:rgba(34,197,94,0.04);}
-.dark .diary-food-item.recent-item{background:rgba(34,197,94,0.06);}
-.diary-food-item.recent-item:hover{background:rgba(34,197,94,0.1);}
+.diary-food-item.recent-item{background:rgba(255,126,103,0.04);}
+.dark .diary-food-item.recent-item{background:rgba(255,126,103,0.06);}
+.diary-food-item.recent-item:hover{background:rgba(255,126,103,0.1);}
 .diary-serving-modal{padding:20px;}
 .diary-serving-row{display:flex;align-items:center;gap:12px;margin-top:16px;}
 .diary-serving-input{flex:1;padding:14px 16px;border:2px solid var(--divider);border-radius:14px;font-size:16px;background:var(--bg-primary);color:var(--text-primary);outline:none;font-family:inherit;text-align:center;transition:border-color 0.2s;}
@@ -400,11 +400,11 @@ to{transform:rotate(360deg);}
 .diary-preview-lbl{font-size:10px;color:var(--text-muted);}
 .diary-empty{text-align:center;padding:24px 16px;color:var(--text-muted);font-size:14px;}
 .diary-create-food-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 16px;margin-top:12px;background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;}
-.diary-create-food-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(34,197,94,0.3);}
+.diary-create-food-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,126,103,0.3);}
 .diary-create-food-btn:active{transform:scale(0.97);}
 .diary-create-food-btn i{font-size:16px;}
 .source-manage-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:14px;padding:4px 8px;border-radius:6px;transition:background 0.2s;margin-left:4px;}
-.source-manage-btn:hover{background:rgba(34,197,94,0.1);}
+.source-manage-btn:hover{background:rgba(255,126,103,0.1);}
 .source-mgmt-list{list-style:none;padding:0;margin:0 0 12px 0;max-height:280px;overflow-y:auto;}
 .source-mgmt-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-primary);border-radius:10px;margin-bottom:6px;transition:background 0.15s;}
 .source-mgmt-item:hover{background:var(--divider);}
@@ -533,14 +533,14 @@ Firebase 雲端同步
 <button class="submit-btn" style="flex:1;" onclick="handleSignIn()">
 <i class="fas fa-sign-in-alt"></i> 登入
 </button>
-<button class="submit-btn" style="flex:1; background:#8b5cf6;" onclick="handleSignUp()">
+<button class="submit-btn" style="flex:1; background:#C084D4;" onclick="handleSignUp()">
 <i class="fas fa-user-plus"></i> 註冊
 </button>
 </div>
 </div>
 <div id="loggedInInfo" style="display:none;">
-<div style="padding:12px; background:rgba(34,197,94,0.1); border-radius:10px; margin-bottom:12px;">
-<div style="display:flex; align-items:center; gap:8px; color:#22c55e; font-weight:600; font-size:14px; margin-bottom:6px;">
+<div style="padding:12px; background:rgba(255,126,103,0.1); border-radius:10px; margin-bottom:12px;">
+<div style="display:flex; align-items:center; gap:8px; color:#66BB6A; font-weight:600; font-size:14px; margin-bottom:6px;">
 <i class="fas fa-check-circle"></i> 已登入
 </div>
 <div style="font-size:13px; color:var(--text-secondary);">
@@ -563,8 +563,8 @@ UID: <code id="authUserUid" style="background:var(--bg-primary); padding:2px 6px
 <span>上次同步：<span id="lastSyncTime">從未</span></span>
 </div>
 <div id="syncModeIndicator" style="display:flex; align-items:center; gap:8px; color:var(--text-secondary); font-size:13px; margin-top:6px;">
-<i class="fas fa-check-circle" style="color:#22c55e;"></i>
-<span style="color:#22c55e;">已連接 Firebase</span>
+<i class="fas fa-check-circle" style="color:#66BB6A;"></i>
+<span style="color:#66BB6A;">已連接 Firebase</span>
 </div>
 </div>
 <div class="form-group">
@@ -614,7 +614,7 @@ service cloud.firestore {
 <button class="submit-btn" style="background:#f59e0b; margin-bottom:8px;" onclick="resetToDefault()">
 <i class="fas fa-undo"></i> 重置為預設資料
 </button>
-<button class="submit-btn" style="background:#8b5cf6; margin-bottom:8px;" onclick="exportLocalData()">
+<button class="submit-btn" style="background:#C084D4; margin-bottom:8px;" onclick="exportLocalData()">
 <i class="fas fa-download"></i> 匯出本機資料 (JSON)
 </button>
 <button class="submit-btn" style="background:#06b6d4;" onclick="exportToCSV()">
@@ -835,22 +835,22 @@ service cloud.firestore {
 </div>
 <div class="form-row">
 <div class="form-group">
-<label class="form-label">鈉 (mg) - 選填</label>
-<input type="number" step="0.1" class="form-input" id="sodiumServing" placeholder="選填">
-</div>
-<div class="form-group">
-<label class="form-label">鈣 (mg) - 選填</label>
-<input type="number" step="0.1" class="form-input" id="calciumServing" placeholder="選填">
-</div>
-</div>
-<div class="form-row">
-<div class="form-group">
 <label class="form-label">糖 (g) - 選填</label>
 <input type="number" step="0.1" class="form-input" id="sugarServing" placeholder="選填">
 </div>
 <div class="form-group">
 <label class="form-label">纖維 (g) - 選填</label>
 <input type="number" step="0.1" class="form-input" id="fiberServing" placeholder="選填">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label class="form-label">鈉 (mg) - 選填</label>
+<input type="number" step="0.1" class="form-input" id="sodiumServing" placeholder="選填">
+</div>
+<div class="form-group">
+<label class="form-label">鈣 (mg) - 選填</label>
+<input type="number" step="0.1" class="form-input" id="calciumServing" placeholder="選填">
 </div>
 </div>
 <button type="submit" class="submit-btn" id="submitBtn">儲存</button>
@@ -970,7 +970,7 @@ service cloud.firestore {
 </div>
 <div id="aiImportFileInfo" style="display: none; margin-top: 12px; padding: 12px; background: var(--bg-secondary); border-radius: 10px;">
 <div style="display: flex; align-items: center; gap: 10px;">
-<i id="aiImportFileIcon" class="fas fa-file-excel" style="font-size: 24px; color: #22c55e;"></i>
+<i id="aiImportFileIcon" class="fas fa-file-excel" style="font-size: 24px; color: #66BB6A;"></i>
 <div style="flex: 1;">
 <div id="aiImportFileName" style="font-weight: 600;"></div>
 <div id="aiImportFileSize" style="font-size: 12px; color: var(--text-secondary);"></div>
@@ -1028,7 +1028,7 @@ service cloud.firestore {
 <button type="button" class="diary-create-food-btn" style="margin-top:0;" onclick="openCreateFoodFromDiary()">
 <i class="fas fa-plus"></i> 新增食物
 </button>
-<button type="button" class="diary-create-food-btn" style="margin-top:0;background:linear-gradient(135deg,#f59e0b,#f97316);" onclick="scanBarcodeForDiary()">
+<button type="button" class="diary-create-food-btn" style="margin-top:0;background:linear-gradient(135deg,#F0A848,#F08040);" onclick="scanBarcodeForDiary()">
 <i class="fas fa-barcode"></i> 掃描
 </button>
 </div>
@@ -2984,7 +2984,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    clearPdfImport();
    const fileIcon = document.getElementById('aiImportFileIcon');
    fileIcon.className = 'fas fa-file-excel';
-   fileIcon.style.color = '#22c55e';
+   fileIcon.style.color = '#66BB6A';
    document.getElementById('aiImportFileName').textContent = file.name;
    document.getElementById('aiImportFileSize').textContent = formatFileSize(file.size);
    document.getElementById('aiImportFileInfo').style.display = 'block';
@@ -3604,7 +3604,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 type === 'success' ? 'rgba(34, 197, 94, 0.1)' :
                 'rgba(99, 102, 241, 0.1)';
    status.style.color = type === 'error' ? '#ef4444' :
-             type === 'success' ? '#22c55e' :
+             type === 'success' ? '#66BB6A' :
              'var(--accent)';
    status.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'spinner fa-spin'}"></i> ${message}`;
   }
@@ -4281,7 +4281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    var indicator = document.getElementById('syncModeIndicator');
    if (indicator) {
     if (connected) {
-     indicator.innerHTML = '<i class="fas fa-check-circle" style="color: #22c55e;"></i><span style="color: #22c55e;">已連接 Firebase</span>';
+     indicator.innerHTML = '<i class="fas fa-check-circle" style="color: #66BB6A;"></i><span style="color: #66BB6A;">已連接 Firebase</span>';
     } else {
      indicator.innerHTML = '<i class="fas fa-info-circle"></i><span>尚未設定 Firebase 同步</span>';
     }
@@ -4296,7 +4296,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    status.style.background = type === 'success' ? 'rgba(34, 197, 94, 0.1)' :
                 type === 'error' ? 'rgba(239, 68, 68, 0.1)' :
                 'rgba(99, 102, 241, 0.1)';
-   status.style.color = type === 'success' ? '#22c55e' :
+   status.style.color = type === 'success' ? '#66BB6A' :
              type === 'error' ? '#ef4444' :
              'var(--text-secondary)';
   }
@@ -5140,7 +5140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('diaryWaterBarFill').style.width = waterPct + '%';
    var waterRemain = Math.max(0, waterGoal - (dayData.water || 0));
    document.getElementById('diaryWaterRemaining').textContent = waterRemain > 0 ? '仲差 ' + waterRemain + ' ml' : '✓ 已達標';
-   if (waterRemain <= 0) document.getElementById('diaryWaterRemaining').style.color = '#22c55e';
+   if (waterRemain <= 0) document.getElementById('diaryWaterRemaining').style.color = '#66BB6A';
    else document.getElementById('diaryWaterRemaining').style.color = '';
    // Alcohol toggle
    var alcToggle = document.getElementById('diaryAlcoholToggle');
@@ -5789,33 +5789,47 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* === Barcode Scanner === */
   var _barcodeScanner = null;
   var _barcodeScanMode = 'form'; // 'form', 'diary', 'search'
+  var _barcodeScannerRunning = false;
+  var _barcodeScanCallback = null;
 
   function _startBarcodeScanner(onSuccess) {
    var modal = document.getElementById('barcodeScannerModal');
    modal.classList.add('active');
-   document.getElementById('barcodeScannerStatus').textContent = '正在啟動相機...';
    document.getElementById('barcodeResultDisplay').style.display = 'none';
+   _barcodeScanCallback = onSuccess;
+   // If scanner is already running, just resume scanning
+   if (_barcodeScanner && _barcodeScannerRunning) {
+    document.getElementById('barcodeScannerStatus').textContent = '請將條碼對準方框';
+    _barcodeScanner.resume();
+    return;
+   }
+   document.getElementById('barcodeScannerStatus').textContent = '正在啟動相機...';
    setTimeout(function() {
     try {
-     _barcodeScanner = new Html5Qrcode('barcodeScannerRegion');
+     if (!_barcodeScanner) {
+      _barcodeScanner = new Html5Qrcode('barcodeScannerRegion');
+     }
      _barcodeScanner.start(
       { facingMode: 'environment' },
       { fps: 10, qrbox: { width: 280, height: 150 }, aspectRatio: 1.5 },
       function(decodedText) {
-       // Success
+       // Success — pause instead of stop to keep permission alive
        document.getElementById('barcodeScannerStatus').textContent = '已掃描！';
        document.getElementById('barcodeResultNum').textContent = decodedText;
        document.getElementById('barcodeResultDisplay').style.display = 'block';
-       _stopBarcodeScanner();
+       try { _barcodeScanner.pause(true); } catch(e) {}
+       var cb = _barcodeScanCallback;
+       _barcodeScanCallback = null;
        setTimeout(function() {
-        closeBarcodeScanner();
-        if (onSuccess) onSuccess(decodedText);
-       }, 600);
+        document.getElementById('barcodeScannerModal').classList.remove('active');
+        if (cb) cb(decodedText);
+       }, 500);
       },
       function() {
        // Ignore scan errors (no barcode found in frame)
       }
      ).then(function() {
+      _barcodeScannerRunning = true;
       document.getElementById('barcodeScannerStatus').textContent = '請將條碼對準方框';
      }).catch(function(err) {
       document.getElementById('barcodeScannerStatus').textContent = '無法啟動相機：' + err;
@@ -5827,19 +5841,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function _stopBarcodeScanner() {
-   if (_barcodeScanner) {
+   if (_barcodeScanner && _barcodeScannerRunning) {
     try {
-     _barcodeScanner.stop().catch(function(){});
-    } catch(e) {}
-    try {
-     _barcodeScanner.clear();
-    } catch(e) {}
-    _barcodeScanner = null;
+     _barcodeScanner.stop().then(function() {
+      _barcodeScannerRunning = false;
+      try { _barcodeScanner.clear(); } catch(e) {}
+      _barcodeScanner = null;
+     }).catch(function() {
+      _barcodeScannerRunning = false;
+      _barcodeScanner = null;
+     });
+    } catch(e) {
+     _barcodeScannerRunning = false;
+     _barcodeScanner = null;
+    }
    }
   }
 
   function closeBarcodeScanner() {
-   _stopBarcodeScanner();
+   // Pause instead of stop — keeps camera permission alive
+   if (_barcodeScanner && _barcodeScannerRunning) {
+    try { _barcodeScanner.pause(true); } catch(e) {}
+   }
    document.getElementById('barcodeScannerModal').classList.remove('active');
   }
 
