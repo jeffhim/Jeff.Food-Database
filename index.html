@@ -2800,6 +2800,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     foods.push(foodData);
     showToast('已新增食物');
    }
+   var wasDiaryCreating = _diaryCreatingFood;
    closeModal();
    renderFoodList();
    renderCategories();
@@ -2807,8 +2808,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    saveToIndexedDB(); // Auto-save to IndexedDB
    doAutoSync();
    // If creating food from diary, auto-open serving modal
-   if (_diaryCreatingFood) {
-    _diaryCreatingFood = false;
+   if (wasDiaryCreating) {
     selectDiaryFood(foodData.id);
    }
   }
