@@ -19,7 +19,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
-:root{--bg-primary:#FFF5EE;--bg-secondary:#FFFFFF;--bg-card:#FFFFFF;--text-primary:#3D2B1F;--text-secondary:#8B7355;--text-muted:#B8A495;--accent:#FF7E67;--accent-dark:#E96651;--header-gradient:linear-gradient(135deg,#FF7B6B 0%,#FF9080 50%,#FFAB91 100%);--divider:rgba(61,43,31,0.07);--card-shadow:0 2px 12px rgba(139,90,60,0.06);--pill-bg:#F5E6D8;--pill-active:#FF7E67;--search-bg:rgba(255,255,255,0.2);--cal-color:#E8758A;--protein-color:#F0A830;--fat-color:#F08040;--carbs-color:#45B5AA;--sodium-color:#D070B0;--calcium-color:#70C078;--sugar-color:#E8758A;--fiber-color:#70C078;}
+:root{--bg-primary:#FFF5EE;--bg-secondary:#FFFFFF;--bg-card:#FFFFFF;--text-primary:#3D2B1F;--text-secondary:#8B7355;--text-muted:#B8A495;--accent:#FF7E67;--accent-dark:#E96651;--header-gradient:linear-gradient(135deg,#FF7B6B 0%,#FF9080 50%,#FFAB91 100%);--divider:rgba(61,43,31,0.07);--card-shadow:0 2px 12px rgba(139,90,60,0.06);--pill-bg:#F5E6D8;--pill-active:#FF7E67;--search-bg:rgba(255,255,255,0.2);--cal-color:#E8758A;--protein-color:#F0A830;--fat-color:#F08040;--carbs-color:#45B5AA;--sodium-color:#D070B0;--calcium-color:#70C078;--sugar-color:#E8758A;--fiber-color:#70C078;--satfat-color:#D97858;--transfat-color:#C05858;}
 .dark{--bg-primary:#1C1512;--bg-secondary:#2A221E;--bg-card:#382E29;--text-primary:#F5E8DE;--text-secondary:#A89080;--text-muted:#7A6B5E;--divider:rgba(245,232,222,0.08);--card-shadow:0 4px 12px rgba(0,0,0,0.3);--pill-bg:#4A3F38;--search-bg:rgba(255,255,255,0.1);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html{min-height:100%;overflow-x:hidden;}
@@ -88,6 +88,8 @@ to{opacity:1;transform:translateY(0);}
 .nutrition-box.calcium .nutrition-value{color:var(--calcium-color);}
 .nutrition-box.sugar .nutrition-value{color:var(--sugar-color);}
 .nutrition-box.fiber .nutrition-value{color:var(--fiber-color);}
+.nutrition-box.satfat .nutrition-value{color:var(--satfat-color);}
+.nutrition-box.transfat .nutrition-value{color:var(--transfat-color);}
 .nutrition-value.not-entered{color:var(--text-muted) !important;font-size:13px;font-weight:400;font-style:italic;opacity:0.7;}
 .food-footer{margin-top:16px;padding-top:12px;border-top:1px solid var(--divider);display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:12px;}
 .food-footer i{font-size:14px;}
@@ -767,12 +769,12 @@ service cloud.firestore {
 </div>
 <div class="scan-status" id="scanStatus"></div>
 <div class="form-group">
-<label class="form-label">中文名稱</label>
+<label class="form-label">主要名字</label>
 <input type="text" class="form-input" id="foodName" placeholder="例如：蝦餃" required>
 </div>
 <div class="form-group">
-<label class="form-label">英文名稱 (選填)</label>
-<input type="text" class="form-input" id="foodNameEn" placeholder="e.g. Steamed prawn dumpling">
+<label class="form-label">次要名字 (選填)</label>
+<input type="text" class="form-input" id="foodNameEn" placeholder="選填，例如英文名或別名">
 </div>
 <div class="form-group">
 <label class="form-label">品牌 (選填)</label>
@@ -835,6 +837,16 @@ service cloud.firestore {
 <div class="form-group">
 <label class="form-label">碳水化合物 (g)</label>
 <input type="number" step="0.1" class="form-input" id="carbsServing" placeholder="留空=未記錄">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label class="form-label">飽和脂肪 (g)</label>
+<input type="number" step="0.1" class="form-input" id="satfatServing" placeholder="留空=未記錄">
+</div>
+<div class="form-group">
+<label class="form-label">反式脂肪 (g)</label>
+<input type="number" step="0.1" class="form-input" id="transfatServing" placeholder="留空=未記錄">
 </div>
 </div>
 <div class="form-row">
@@ -1065,6 +1077,14 @@ service cloud.firestore {
 <div class="quick-entry-field">
 <label style="color:var(--fat-color);">脂肪 (g)</label>
 <input type="number" id="quickEntryFat" placeholder="0" step="0.1" onfocus="this.select()">
+</div>
+<div class="quick-entry-field">
+<label style="color:var(--satfat-color);">飽和脂肪 (g)</label>
+<input type="number" id="quickEntrySatfat" placeholder="" step="0.1" onfocus="this.select()">
+</div>
+<div class="quick-entry-field">
+<label style="color:var(--transfat-color);">反式脂肪 (g)</label>
+<input type="number" id="quickEntryTransfat" placeholder="" step="0.1" onfocus="this.select()">
 </div>
 <div class="quick-entry-field">
 <label style="color:var(--carbs-color);">碳水 (g)</label>
@@ -1982,6 +2002,14 @@ document.addEventListener('DOMContentLoaded', async () => {
        <div class="nutrition-value${data.fat === null || data.fat === undefined ? ' not-entered' : ''}">${data.fat !== null && data.fat !== undefined ? data.fat + 'g' : '未填'}</div>
        <div class="nutrition-label">脂肪</div>
       </div>
+      <div class="nutrition-box satfat">
+       <div class="nutrition-value${data.satfat === null || data.satfat === undefined ? ' not-entered' : ''}">${data.satfat !== null && data.satfat !== undefined ? data.satfat + 'g' : '未填'}</div>
+       <div class="nutrition-label">飽和脂肪</div>
+      </div>
+      <div class="nutrition-box transfat">
+       <div class="nutrition-value${data.transfat === null || data.transfat === undefined ? ' not-entered' : ''}">${data.transfat !== null && data.transfat !== undefined ? data.transfat + 'g' : '未填'}</div>
+       <div class="nutrition-label">反式脂肪</div>
+      </div>
       <div class="nutrition-box carbs">
        <div class="nutrition-value${data.carbs === null || data.carbs === undefined ? ' not-entered' : ''}">${data.carbs !== null && data.carbs !== undefined ? data.carbs + 'g' : '未填'}</div>
        <div class="nutrition-label">碳水</div>
@@ -2676,6 +2704,8 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('calciumServing').value = displayVal(p.calcium);
    document.getElementById('sugarServing').value = displayVal(p.sugar);
    document.getElementById('fiberServing').value = displayVal(p.fiber);
+   document.getElementById('satfatServing').value = displayVal(p.satfat);
+   document.getElementById('transfatServing').value = displayVal(p.transfat);
    if (ps && ps.weight) {
     document.getElementById('servingWeight').value = ps.weight;
    } else {
@@ -2730,7 +2760,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     sodium: parseNutritionValue('sodiumServing'),
     calcium: parseNutritionValue('calciumServing'),
     sugar: parseNutritionValue('sugarServing'),
-    fiber: parseNutritionValue('fiberServing')
+    fiber: parseNutritionValue('fiberServing'),
+    satfat: parseNutritionValue('satfatServing'),
+    transfat: parseNutritionValue('transfatServing')
    };
    let foodData;
    if (formInputMode === 'per100g') {
@@ -2750,7 +2782,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       sodium: toPerServing(nutritionData.sodium, 0),
       calcium: toPerServing(nutritionData.calcium, 0),
       sugar: toPerServing(nutritionData.sugar),
-      fiber: toPerServing(nutritionData.fiber)
+      fiber: toPerServing(nutritionData.fiber),
+      satfat: toPerServing(nutritionData.satfat),
+      transfat: toPerServing(nutritionData.transfat)
      };
     }
     const newId = editId || generateNextId();
@@ -2781,7 +2815,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       sodium: toPer100g(nutritionData.sodium),
       calcium: toPer100g(nutritionData.calcium),
       sugar: toPer100g(nutritionData.sugar, 1),
-      fiber: toPer100g(nutritionData.fiber, 1)
+      fiber: toPer100g(nutritionData.fiber, 1),
+      satfat: toPer100g(nutritionData.satfat, 1),
+      transfat: toPer100g(nutritionData.transfat, 1)
      };
     }
     const newId = editId || generateNextId();
@@ -3926,7 +3962,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    showToast(`成功匯入 ${addedCount} 款食物到「${targetCategory}」`);
   }
   function exportToCSV() {
-   const headers = ['id', 'name', 'nameEn', 'category', 'calories_100g', 'protein_100g', 'fat_100g', 'carbs_100g', 'sodium_100g', 'calcium_100g', 'sugar_100g', 'fiber_100g', 'serving_weight', 'calories_serving', 'protein_serving', 'fat_serving', 'carbs_serving', 'sodium_serving', 'calcium_serving', 'sugar_serving', 'fiber_serving'];
+   const headers = ['id', 'name', 'nameEn', 'category', 'calories_100g', 'protein_100g', 'fat_100g', 'satfat_100g', 'transfat_100g', 'carbs_100g', 'sodium_100g', 'calcium_100g', 'sugar_100g', 'fiber_100g', 'serving_weight', 'calories_serving', 'protein_serving', 'fat_serving', 'satfat_serving', 'transfat_serving', 'carbs_serving', 'sodium_serving', 'calcium_serving', 'sugar_serving', 'fiber_serving'];
    let csv = headers.join(',') + '\n';
    foods.forEach(food => {
     const row = [
@@ -3937,6 +3973,8 @@ document.addEventListener('DOMContentLoaded', async () => {
      food.per100g?.calories ?? '',
      food.per100g?.protein ?? '',
      food.per100g?.fat ?? '',
+   food.per100g?.satfat ?? '',
+   food.per100g?.transfat ?? '',
      food.per100g?.carbs ?? '',
      food.per100g?.sodium ?? '',
      food.per100g?.calcium ?? '',
@@ -3946,6 +3984,8 @@ document.addEventListener('DOMContentLoaded', async () => {
      food.perServing?.calories ?? '',
      food.perServing?.protein ?? '',
      food.perServing?.fat ?? '',
+   food.perServing?.satfat ?? '',
+   food.perServing?.transfat ?? '',
      food.perServing?.carbs ?? '',
      food.perServing?.sodium ?? '',
      food.perServing?.calcium ?? '',
@@ -5026,13 +5066,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function _calcEntryNutrition(entry) {
-   // entry: { foodId, foodName, mode:'serving'|'grams', servings, grams, nutrition:{calories,protein,fat,carbs,sodium,calcium,sugar,fiber} }
+   // entry: { foodId, foodName, mode:'serving'|'grams', servings, grams, nutrition:{calories,protein,fat,satfat,transfat,carbs,sodium,calcium,sugar,fiber} }
    return entry.nutrition || {};
   }
 
   function _calcDayTotals(dateKey) {
    var day = _getDayData(dateKey);
-   var totals = {calories:0, protein:0, fat:0, carbs:0, sodium:0, calcium:0, sugar:0, fiber:0};
+   var totals = {calories:0, protein:0, fat:0, carbs:0, sodium:0, calcium:0, sugar:0, fiber:0, satfat:0, transfat:0};
    _diaryMeals.forEach(function(m) {
     (day.meals[m.key] || []).forEach(function(entry) {
      var n = _calcEntryNutrition(entry);
@@ -5293,7 +5333,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function _calcNutritionForEntry(food, mode, servings, grams) {
    var result = {};
-   var nutrients = ['calories','protein','fat','carbs','sodium','calcium','sugar','fiber'];
+   var nutrients = ['calories','protein','fat','carbs','sodium','calcium','sugar','fiber','satfat','transfat'];
    if (mode === 'serving' && food.perServing) {
     nutrients.forEach(function(k) {
      var v = food.perServing[k];
@@ -5314,11 +5354,11 @@ document.addEventListener('DOMContentLoaded', async () => {
    var servings = parseFloat(document.getElementById('diaryServingCount').value) || 1;
    var grams = parseFloat(document.getElementById('diaryGramsInput').value) || 100;
    var n = _calcNutritionForEntry(_diarySelectedFood, _diaryServingMode, servings, grams);
-   var labels = {calories:'卡路里',protein:'蛋白質',fat:'脂肪',carbs:'碳水',sodium:'鈉',calcium:'鈣'};
-   var units = {calories:'kcal',protein:'g',fat:'g',carbs:'g',sodium:'mg',calcium:'mg'};
-   var colors = {calories:'var(--cal-color)',protein:'var(--protein-color)',fat:'var(--fat-color)',carbs:'var(--carbs-color)',sodium:'var(--sodium-color)',calcium:'var(--calcium-color)'};
+   var labels = {calories:'卡路里',protein:'蛋白質',fat:'脂肪',satfat:'飽和',transfat:'反式',carbs:'碳水',sodium:'鈉',calcium:'鈣'};
+   var units = {calories:'kcal',protein:'g',fat:'g',satfat:'g',transfat:'g',carbs:'g',sodium:'mg',calcium:'mg'};
+   var colors = {calories:'var(--cal-color)',protein:'var(--protein-color)',fat:'var(--fat-color)',satfat:'var(--satfat-color)',transfat:'var(--transfat-color)',carbs:'var(--carbs-color)',sodium:'var(--sodium-color)',calcium:'var(--calcium-color)'};
    var html = '';
-   ['calories','protein','fat','carbs','sodium','calcium'].forEach(function(k) {
+   ['calories','protein','fat','satfat','transfat','carbs','sodium','calcium'].forEach(function(k) {
     var v = n[k] || 0;
     var display = k === 'calories' ? Math.round(v) : v.toFixed(1);
     html += '<div class="diary-preview-box"><div class="diary-preview-val" style="color:'+colors[k]+'">'+display+'</div><div class="diary-preview-lbl">'+labels[k]+' ('+units[k]+')</div></div>';
@@ -5395,6 +5435,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('quickEntryCarbs').value = (entry.nutrition && entry.nutrition.carbs) || '';
     document.getElementById('quickEntrySodium').value = (entry.nutrition && entry.nutrition.sodium) || '';
     document.getElementById('quickEntrySugar').value = (entry.nutrition && entry.nutrition.sugar) || '';
+    document.getElementById('quickEntrySatfat').value = (entry.nutrition && entry.nutrition.satfat) || '';
+    document.getElementById('quickEntryTransfat').value = (entry.nutrition && entry.nutrition.transfat) || '';
     document.getElementById('diaryQuickEntryModal').classList.add('active');
     return;
    }
@@ -5438,11 +5480,11 @@ document.addEventListener('DOMContentLoaded', async () => {
    var servings = parseFloat(document.getElementById('diaryEditServingCount').value) || 1;
    var grams = parseFloat(document.getElementById('diaryEditGramsInput').value) || 100;
    var n = _calcNutritionForEntry(f, _diaryEditMode, servings, grams);
-   var labels = {calories:'卡路里',protein:'蛋白質',fat:'脂肪',carbs:'碳水',sodium:'鈉',calcium:'鈣'};
-   var units = {calories:'kcal',protein:'g',fat:'g',carbs:'g',sodium:'mg',calcium:'mg'};
-   var colors = {calories:'var(--cal-color)',protein:'var(--protein-color)',fat:'var(--fat-color)',carbs:'var(--carbs-color)',sodium:'var(--sodium-color)',calcium:'var(--calcium-color)'};
+   var labels = {calories:'卡路里',protein:'蛋白質',fat:'脂肪',satfat:'飽和',transfat:'反式',carbs:'碳水',sodium:'鈉',calcium:'鈣'};
+   var units = {calories:'kcal',protein:'g',fat:'g',satfat:'g',transfat:'g',carbs:'g',sodium:'mg',calcium:'mg'};
+   var colors = {calories:'var(--cal-color)',protein:'var(--protein-color)',fat:'var(--fat-color)',satfat:'var(--satfat-color)',transfat:'var(--transfat-color)',carbs:'var(--carbs-color)',sodium:'var(--sodium-color)',calcium:'var(--calcium-color)'};
    var html = '';
-   ['calories','protein','fat','carbs','sodium','calcium'].forEach(function(k) {
+   ['calories','protein','fat','satfat','transfat','carbs','sodium','calcium'].forEach(function(k) {
     var v = n[k] || 0;
     var display = k === 'calories' ? Math.round(v) : v.toFixed(1);
     html += '<div class="diary-preview-box"><div class="diary-preview-val" style="color:'+colors[k]+'">'+display+'</div><div class="diary-preview-lbl">'+labels[k]+' ('+units[k]+')</div></div>';
@@ -5734,6 +5776,8 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('quickEntryCarbs').value = '';
    document.getElementById('quickEntrySodium').value = '';
    document.getElementById('quickEntrySugar').value = '';
+   document.getElementById('quickEntrySatfat').value = '';
+   document.getElementById('quickEntryTransfat').value = '';
    document.getElementById('diaryQuickEntryModal').classList.add('active');
    setTimeout(function(){ document.getElementById('quickEntryName').focus(); }, 300);
   }
@@ -5749,6 +5793,8 @@ document.addEventListener('DOMContentLoaded', async () => {
    var carbs = parseFloat(document.getElementById('quickEntryCarbs').value) || 0;
    var sodium = parseFloat(document.getElementById('quickEntrySodium').value) || 0;
    var sugar = parseFloat(document.getElementById('quickEntrySugar').value) || 0;
+   var satfat = parseFloat(document.getElementById('quickEntrySatfat').value) || 0;
+   var transfat = parseFloat(document.getElementById('quickEntryTransfat').value) || 0;
    if (cal === 0 && protein === 0 && fat === 0 && carbs === 0) {
     showToast('請至少輸入一項營養數值');
     return;
@@ -5768,7 +5814,9 @@ document.addEventListener('DOMContentLoaded', async () => {
      fat: fat,
      carbs: carbs,
      sodium: sodium || null,
-     sugar: sugar || null
+     sugar: sugar || null,
+     satfat: satfat || null,
+     transfat: transfat || null
     }
    };
    var dateKey = _diaryKey(_diaryDate);
