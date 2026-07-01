@@ -88,6 +88,7 @@ to{opacity:1;transform:translateY(0);}
 .nutrition-box.calcium .nutrition-value{color:var(--calcium-color);}
 .nutrition-box.sugar .nutrition-value{color:var(--sugar-color);}
 .nutrition-box.fiber .nutrition-value{color:var(--fiber-color);}
+.nutrition-value.not-entered{color:var(--text-muted) !important;font-size:13px;font-weight:400;font-style:italic;opacity:0.7;}
 .food-footer{margin-top:16px;padding-top:12px;border-top:1px solid var(--divider);display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:12px;}
 .food-footer i{font-size:14px;}
 .fab{position:fixed;bottom:80px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--accent);color:white;border:none;box-shadow:0 6px 20px rgba(255,126,103,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;z-index:9999;transition:box-shadow 0.2s ease;contain:layout;}
@@ -813,44 +814,47 @@ service cloud.firestore {
 <input type="number" step="0.1" class="form-input" id="servingWeight" placeholder="例如：31（填寫後可自動計算每份營養）">
 </div>
 <div class="form-section-title" id="nutritionSectionTitle">營養資料 (每100g)</div>
-<div class="form-row">
-<div class="form-group">
-<label class="form-label">卡路里 (kcal) - 選填</label>
-<input type="number" step="0.1" class="form-input" id="caloriesServing" placeholder="選填">
-</div>
-<div class="form-group">
-<label class="form-label">蛋白質 (g) - 選填</label>
-<input type="number" step="0.1" class="form-input" id="proteinServing" placeholder="選填">
-</div>
+<div style="font-size:12px;color:var(--text-muted);margin:-8px 0 14px 0;line-height:1.5;padding:8px 12px;background:var(--bg-primary);border-radius:8px;">
+<i class="fas fa-info-circle" style="color:var(--accent);margin-right:4px;"></i>留空 = 未記錄（顯示「未填」），輸入 0 = 數值確認為零
 </div>
 <div class="form-row">
 <div class="form-group">
-<label class="form-label">脂肪 (g) - 選填</label>
-<input type="number" step="0.1" class="form-input" id="fatServing" placeholder="選填">
+<label class="form-label">卡路里 (kcal)</label>
+<input type="number" step="0.1" class="form-input" id="caloriesServing" placeholder="留空=未記錄">
 </div>
 <div class="form-group">
-<label class="form-label">碳水化合物 (g) - 選填</label>
-<input type="number" step="0.1" class="form-input" id="carbsServing" placeholder="選填">
+<label class="form-label">蛋白質 (g)</label>
+<input type="number" step="0.1" class="form-input" id="proteinServing" placeholder="留空=未記錄">
 </div>
 </div>
 <div class="form-row">
 <div class="form-group">
-<label class="form-label">糖 (g) - 選填</label>
-<input type="number" step="0.1" class="form-input" id="sugarServing" placeholder="選填">
+<label class="form-label">脂肪 (g)</label>
+<input type="number" step="0.1" class="form-input" id="fatServing" placeholder="留空=未記錄">
 </div>
 <div class="form-group">
-<label class="form-label">纖維 (g) - 選填</label>
-<input type="number" step="0.1" class="form-input" id="fiberServing" placeholder="選填">
+<label class="form-label">碳水化合物 (g)</label>
+<input type="number" step="0.1" class="form-input" id="carbsServing" placeholder="留空=未記錄">
 </div>
 </div>
 <div class="form-row">
 <div class="form-group">
-<label class="form-label">鈉 (mg) - 選填</label>
-<input type="number" step="0.1" class="form-input" id="sodiumServing" placeholder="選填">
+<label class="form-label">糖 (g)</label>
+<input type="number" step="0.1" class="form-input" id="sugarServing" placeholder="留空=未記錄">
 </div>
 <div class="form-group">
-<label class="form-label">鈣 (mg) - 選填</label>
-<input type="number" step="0.1" class="form-input" id="calciumServing" placeholder="選填">
+<label class="form-label">纖維 (g)</label>
+<input type="number" step="0.1" class="form-input" id="fiberServing" placeholder="留空=未記錄">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label class="form-label">鈉 (mg)</label>
+<input type="number" step="0.1" class="form-input" id="sodiumServing" placeholder="留空=未記錄">
+</div>
+<div class="form-group">
+<label class="form-label">鈣 (mg)</label>
+<input type="number" step="0.1" class="form-input" id="calciumServing" placeholder="留空=未記錄">
 </div>
 </div>
 <button type="submit" class="submit-btn" id="submitBtn">儲存</button>
@@ -1967,19 +1971,19 @@ document.addEventListener('DOMContentLoaded', async () => {
      </div>
      <div class="nutrition-grid" onclick="toggleDisplayMode(event, '${food.id}')" title="點擊切換顯示模式">
       <div class="nutrition-box cal">
-       <div class="nutrition-value">${data.calories !== null && data.calories !== undefined ? data.calories : '--'}</div>
+       <div class="nutrition-value${data.calories === null || data.calories === undefined ? ' not-entered' : ''}">${data.calories !== null && data.calories !== undefined ? data.calories : '未填'}</div>
        <div class="nutrition-label">KCAL</div>
       </div>
       <div class="nutrition-box protein">
-       <div class="nutrition-value">${data.protein !== null && data.protein !== undefined ? data.protein + 'g' : '--'}</div>
+       <div class="nutrition-value${data.protein === null || data.protein === undefined ? ' not-entered' : ''}">${data.protein !== null && data.protein !== undefined ? data.protein + 'g' : '未填'}</div>
        <div class="nutrition-label">蛋白質</div>
       </div>
       <div class="nutrition-box fat">
-       <div class="nutrition-value">${data.fat !== null && data.fat !== undefined ? data.fat + 'g' : '--'}</div>
+       <div class="nutrition-value${data.fat === null || data.fat === undefined ? ' not-entered' : ''}">${data.fat !== null && data.fat !== undefined ? data.fat + 'g' : '未填'}</div>
        <div class="nutrition-label">脂肪</div>
       </div>
       <div class="nutrition-box carbs">
-       <div class="nutrition-value">${data.carbs !== null && data.carbs !== undefined ? data.carbs + 'g' : '--'}</div>
+       <div class="nutrition-value${data.carbs === null || data.carbs === undefined ? ' not-entered' : ''}">${data.carbs !== null && data.carbs !== undefined ? data.carbs + 'g' : '未填'}</div>
        <div class="nutrition-label">碳水</div>
       </div>
       ${data.sodium !== null && data.sodium !== undefined ? `
@@ -2188,6 +2192,8 @@ document.addEventListener('DOMContentLoaded', async () => {
    document.getElementById('newCategoryName').value = '';
    document.getElementById('newCategoryEmoji').value = '';
    document.getElementById('addModal').classList.add('active');
+   var modalScroll = document.querySelector('#addModal .modal');
+   if (modalScroll) modalScroll.scrollTop = 0;
   }
   function closeModal() {
    document.getElementById('addModal').classList.remove('active');
@@ -2676,6 +2682,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('servingWeight').value = '';
    }
    document.getElementById('addModal').classList.add('active');
+   var modalScroll = document.querySelector('#addModal .modal');
+   if (modalScroll) modalScroll.scrollTop = 0;
   }
   function generateNextId() {
    const maxId = Math.max(...foods.map(f => parseInt(f.id) || 0), 0);
